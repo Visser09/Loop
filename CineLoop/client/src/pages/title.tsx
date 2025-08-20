@@ -315,3 +315,24 @@ export default function TitlePage() {
     </div>
   );
 }
+import { useParams } from "wouter";
+import Header from "@/components/layout/header";
+import BottomNav from "@/components/layout/bottom-nav";
+import { Card } from "@/components/ui/card";
+
+export default function TitlePage() {
+  const params = useParams();
+  
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container max-w-2xl mx-auto px-4 pt-16 pb-20">
+        <Card className="p-6 text-center">
+          <h2 className="text-2xl font-bold mb-2">Title Details</h2>
+          <p className="text-muted-foreground">Title ID: {params.id}</p>
+        </Card>
+      </main>
+      <BottomNav />
+    </div>
+  );
+}

@@ -121,3 +121,33 @@ export default function Landing() {
     </div>
   );
 }
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useLocation } from "wouter";
+
+export default function LandingPage() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 text-center space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-primary">CineLoop</h1>
+          <p className="text-lg text-muted-foreground">
+            Social platform for movies & TV
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <Button 
+            onClick={() => setLocation("/home")} 
+            className="w-full"
+            size="lg"
+          >
+            Get Started
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}

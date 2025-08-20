@@ -257,3 +257,40 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
     </div>
   );
 }
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send } from "lucide-react";
+
+interface ConversationalSearchProps {
+  onClose: () => void;
+}
+
+export default function ConversationalSearch({ onClose }: ConversationalSearchProps) {
+  return (
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold">AI Movie Assistant</h3>
+        <p className="text-sm text-muted-foreground">
+          Ask me anything about movies and TV shows
+        </p>
+      </div>
+      
+      <Card className="p-4">
+        <p className="text-sm text-muted-foreground">
+          AI conversation feature coming soon!
+        </p>
+      </Card>
+
+      <div className="flex gap-2">
+        <Textarea 
+          placeholder="Ask about movies, actors, genres..."
+          className="flex-1"
+        />
+        <Button size="icon">
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
