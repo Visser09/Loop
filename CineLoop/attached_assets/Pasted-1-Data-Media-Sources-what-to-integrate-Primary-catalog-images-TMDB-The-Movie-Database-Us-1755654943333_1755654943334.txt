@@ -1,0 +1,213 @@
+1) Data & Media Sources (what to integrate)
+
+Primary catalog & images: TMDB (The Movie Database)
+
+Use for: titles (movies + TV), posters, backdrops, cast/crew, genres, keywords, trailers (YouTube/Vimeo ids), similar titles, recommendations.
+
+Requirements: attribution in-app (footer or About) and in store listings; respect rate limits & image usage terms.
+
+(Optional) Where-to-watch: JustWatch Partner API (apply for access)
+
+Use for: country-specific availability (“Netflix/Prime/etc. in CA/US”).
+
+If partner access isn’t granted initially, skip and leave the hook in the UI (“Where to watch coming soon”).
+
+(Optional) Trailers playback: Prefer YouTube embeds for official trailers. Only show TMDB-linked official clips to avoid copyright issues.
+
+Decision: For the MVP, TMDB alone is enough to ship a great product. JustWatch is a Phase-2 enhancement.
+
+2) Keys, Environments, and Secrets (how to set it up)
+
+Provide Riplit with:
+
+TMDB API key (v3/v4) + your TMDB account id (for rate monitoring)
+
+(Optional) JustWatch partner credentials (if/when approved)
+
+OpenAI API key (scoped to this project)
+
+Environments: development / staging / production
+
+Separate keys per env. Rotate on hand-off.
+
+Secret handling: use the platform’s secret store (no keys in client apps). All TMDB and OpenAI calls originate from the backend.
+
+3) Catalog Ingestion & Caching (what jobs to build)
+
+Goals: fast UI, low API costs, resilient to rate limits.
+
+Initial backfill: import the “popular” and “top rated” sets for both Movies and TV; also import “trending day/week.” Target at least 5–10k titles to seed.
+
+Normalized records: store TMDB ids, title/type, year, synopsis, genres, keywords, cast (top N), crew (director, writers), poster/backdrop paths, runtime/episode counts, language, status.
+
+Images: store image paths and the current TMDB image base URL config; do not copy poster files to your storage for MVP—serve via TMDB’s CDN sizes (e.g., w500, w780) with responsive rules.
+
+Trailers: store video “site” (YouTube/Vimeo), key, type (“Trailer”, “Teaser”) and official flag.
+
+Sync cadence:
+
+Nightly: update config (base URLs), trending/now playing, popular, newly released.
+
+Weekly: refresh people/credits/keywords, prune stale items.
+
+Caching: application-level caches for common queries (e.g., title page payloads, related rails) with TTL (e.g., 6–24h) + cache bust on update.
+
+Acceptance: the app can list, open, and scroll through titles offline from your DB with occasional refreshes—never blocking on TMDB live calls.
+
+4) Search (title & people) — production-ready behavior
+
+Title search: use the TMDB search endpoints behind your backend; merge multi-search for movies/TV and person search for cast/crew pages.
+
+Filters: type (movie/tv), year range, genres, runtime bands; default sort = popularity desc with a novelty boost (recent releases).
+
+Spellings & alt titles: TMDB already handles; present best match quickly.
+
+Pagination: consistent 20-item pages; show total if affordable (or “more results” sentinel).
+
+Acceptance: typing “the godf” returns “The Godfather” immediately with a proper poster; filters work; no duplicate rows.
+
+5) Conversational AI Search (your OpenAI key)
+
+Objective: users can type natural language (mood/themes/constraints) and get sensible, varied results with a short reason and 2–3 badges.
+
+Pipeline (server-side):
+
+Parse intent with LLM → structured facets:
+
+mood (e.g., “cozy”, “gritty”), themes (heist, found family), tone (light/dark), pacing (slow/fast), constraints (runtime, language, release window), exclusions (violence level, genres).
+
+Candidate retrieval from your catalog:
+
+lexical (genres/keywords/people/year) + semantic (see §6 below) + TMDB “similar” lists as backstop.
+
+Rank & diversify:
+
+relevance to parsed facets,
+
+novelty (not recently surfaced to this user),
+
+diversity (genre/era/region variety),
+
+light quality proxy (community engagement in-app + TMDB vote count threshold).
+
+Explainability:
+
+generate a one-line reason (“Because witty banter + ensemble + 90–120m”)
+
+attach 2–3 badges (themes/mood/era).
+
+Cost controls:
+
+Cache LLM intent parses by normalized query;
+
+Short prompts; small models for parse (classification) and a single short generation for reason line;
+
+Per-user daily token budgets with backoffs (fall back to heuristics if exceeded).
+
+Acceptance: “Find me a short clever thriller like Prisoners but less bleak” returns 8–20 titles with a reason line + badges; results are clearly not all the same vibe or era.
+
+6) Semantic Search & Personalization (no live code, but build plan)
+
+Embeddings & vectors (Phase-1.5):
+
+Build title embeddings from synopsis + keywords + genres + top cast/crew tags.
+
+Store in a vector index (pgvector, Qdrant, or equivalent managed service).
+
+Use for: natural-language retrieval + “related for you” rails that differ from generic TMDB similarity.
+
+Personalization (MVP-plus):
+
+Start with implicit signals: likes, saves, dwell time, opens, skips; model simple user “affinity” to themes/genres/eras.
+
+Slate diversification: ensure at least one curveball per 6–8 results.
+
+Save a lightweight user taste profile (weights over facets) and update with small deltas per session.
+
+Acceptance: When a user repeatedly ignores slashers and saves “cozy mystery” content, horror fades from recs, cozy rises, and badge explanations reflect that.
+
+7) Posters, Clips, and Media Policy (safe & compliant)
+
+Posters/backdrops: served from TMDB CDN via the base URL; include attribution in Settings/About and on splash.
+
+Trailers: prefer official YouTube trailers exposed by TMDB’s video field. Show them inline (muted autoplay off by default).
+
+User clips: strictly ≤15 seconds; capped resolution; disclose “Fair use style” guidance but remove on rights-holder request. Include report button on every card.
+
+Storage: for user-generated images/clips, use your media storage / video pipeline (transcode to HLS). Enforce size/time limits at upload.
+
+Acceptance: Every title shows a real poster/backdrop. Trailer buttons play official trailers. User-uploaded clips are short and clearly marked.
+
+8) Rate Limits, Errors, and Fallbacks (make it robust)
+
+TMDB rate spikes: fail soft (serve from cache); show skeletons and a retry button; log to monitoring.
+
+OpenAI timeouts: fallback to heuristic search (genres/keywords) and a templated reason line (“Because [genre] + [mood]”).
+
+Empty states: friendly, instructive copy (e.g., “Try adding a runtime or a genre”).
+
+Pagination consistency: never duplicate or skip cards across fetches.
+
+Acceptance: In airplane mode, the app still shows cached feed items and loaded title pages; on recovery, it refreshes cleanly.
+
+9) Legal/Attribution/Policy (must-have checkboxes)
+
+TMDB credit: “This product uses the TMDB API but is not endorsed or certified by TMDB.” Include their logo where required.
+
+YouTube terms: if embedding trailers, honor branding/controls and do not strip overlays.
+
+Privacy: no third-party trackers or ad SDKs in MVP; clear privacy policy; account deletion works end-to-end.
+
+COPPA/age gates: if needed, set minimum age and safe-content defaults.
+
+Acceptance: Legal text present in Settings/About; trailer embeds and posters comply; accounts can be deleted fully.
+
+10) QA Scenarios & Acceptance Tests (what to demo)
+
+Search sanity: Typing “ocean heist 2000s funny under 2h” returns reasonable results with reasons and diverse picks.
+
+Title integrity: Opening 20 random titles always shows a poster, year, genres, brief synopsis, cast chips, and related titles.
+
+Trailer flow: 10 popular titles have working trailer buttons with official trailers.
+
+Feed diversity: In 50 cards, you see friends’ posts, trending rails, at least 5 distinct genres/eras, and a couple of AI rec cards.
+
+Cold start: New user (no friends) still gets a lively feed (trending + curated lists + a rec card).
+
+Personalization drift: After liking/saving 10 “cozy” items and skipping 10 “horror,” subsequent rec cards emphasize cozy and de-emphasize horror.
+
+Error handling: Temporarily revoke TMDB key; app still serves cached data and shows friendly fallbacks; restores when key returns.
+
+Policy: TMDB attribution visible; report button works; admin can remove a flagged clip and the feed updates accordingly.
+
+11) Delivery Checklist for Riplit (what you expect back)
+
+Environment runbook (how to add/rotate TMDB & OpenAI keys; how to toggle JustWatch).
+
+Data sync runbook (which jobs run nightly/weekly; how to reindex; how to backfill).
+
+Search specification (query examples → facet JSON → ranking rules).
+
+AI drawer behavior (prompts/guards, fallbacks, token budget plan, caching strategy).
+
+Media handling doc (image sizing rules, clip limits, trailer sources).
+
+Policy & attribution notes (exact copy/placement).
+
+Monitoring & alerts (rate-limit hit alerts, OpenAI error rates, cache hit ratios).
+
+UAT test script mapped to the QA scenarios above.
+
+Demo build with real posters/trailers live and conversational search functioning.
+
+12) Phasing & Dependencies (timeline guidance)
+
+Week 1: Keys & scaffolding; catalog backfill; posters/backdrops live; baseline title search.
+
+Week 2: Feed connected to real catalog; title pages complete; trailers wired.
+
+Week 3: Conversational AI drawer (parse → candidates → rank → reason/badges); cost controls; caching.
+
+Week 4: Personalization basics (signals → taste profile → diversified slates); error/fallback polish; QA pass.
+
+Week 5: Optional JustWatch availability; legal copy; analytics dashboards; beta cut.

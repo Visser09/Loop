@@ -1,0 +1,402 @@
+Project Title
+
+CineLoop — the social home for movies & TV with an AI-powered discovery feed.
+
+One-Sentence Pitch
+
+An Instagram-style mobile app where people post, discuss, and bookmark movies/TV, with a conversational AI that finds what to watch next.
+
+Goals (MVP → V1)
+
+Ship a delightful mobile social feed for titles (posts, likes, comments, lists).
+
+Offer useful discovery on day one (trending + lightweight “Because…” recommendations).
+
+Add a conversational AI search drawer that understands mood, themes, and constraints.
+
+Keep it fast, visual, and safe (clip limits, reporting, basic moderation).
+
+Non-Goals (for MVP)
+
+No streaming-service logins or playback.
+
+No long-form articles, forums, or complex ratings systems.
+
+Web presence limited to a marketing/landing page.
+
+1) User & Use Cases
+
+Primary personas
+
+Casual scroller: wants quick inspiration and fun browsing.
+
+Tastemaker: posts short clips/stills + captions; curates lists; influences friends.
+
+Friend groups: maintain shared watchlists; see each other’s activity.
+
+Explorers: use AI to surface deep-cut recommendations.
+
+Top jobs to be done
+
+“Find me a good movie tonight with minimal effort.”
+
+“Let me share what I watched and see what friends think.”
+
+“Show me fresh but relevant stuff, not the same 30 titles.”
+
+2) Core Features & Scope
+A) Social Feed (Instagram-style)
+
+Scrollable cards with poster/clip, title info, rating (optional), short caption, actions (like, comment, repost, save).
+
+Interleaved discovery units: trending titles; occasional “Because you liked…” rec cards.
+
+Infinite scroll, pull-to-refresh, basic notifications (likes, comments, follows).
+
+Done when: a new user can follow others, see a mixed feed, like/comment, repost, and save titles without latency or jank.
+
+B) Posting & Media
+
+Compose flow: pick a title → attach an image or ≤15-second clip → add caption (short), mood tags, optional rating.
+
+Media rules: clips capped by duration and resolution; image size limits; automatic aspect handling.
+
+Reporting control on every post.
+
+Done when: users can publish posts tied to titles; uploads complete with progress; invalid media is gracefully rejected.
+
+C) Titles & Lists
+
+Title pages with poster/backdrop, synopsis, year, runtime, genres, cast highlights, related titles, plus posts about the title.
+
+Personal “Watchlist” and “Favorites.”
+
+Curated lists (public or private) with ordering and sharing.
+
+Done when: users can open a title from any surface, add it to Watchlist/Favorites, and make/edit lists others can view.
+
+D) Search & AI Discovery
+
+Standard search (title/people) with filters (type, year, genre).
+
+AI drawer: free-text queries like “short clever thriller like Prisoners but less bleak,” returning rationale (“Because …”) and 2–3 badges (themes/mood).
+
+Early ranking: relevance, novelty, diversity; explainability badges.
+
+Done when: plain-English queries return sensible results filtered by constraints, with short reasons and badges.
+
+E) Moderation & Safety
+
+Clip/time limits, profanity filter on captions/comments, report flow, rate limits for posting and commenting.
+
+Basic admin queue for reported content; takedown actions.
+
+Done when: harmful or infringing content can be reported and acted on; abuse can’t overwhelm the system.
+
+F) Analytics & Growth (lightweight)
+
+Track core events (feed views, post creation, likes, comments, saves, list actions, search queries).
+
+Invite links and shareable list/title cards (image preview + deep link) later.
+
+Done when: product metrics dashboards show activation, engagement, diversity, and growth signals.
+
+3) Information Architecture (App Navigation)
+
+Home (Feed): mixed stream (friends, trending, recommendations).
+
+Search: title/person search; AI drawer as a bottom sheet.
+
+Create: title picker → media → caption, tags, rating → publish.
+
+Notifications: likes, comments, follows.
+
+Profile: tabs for Posts, Watchlist, Favorites, Lists; edit profile.
+
+Title: details, related, posts about it.
+
+List: viewer/editor for curated sets.
+
+4) Content Model (Conceptual, no code)
+
+User: handle, display name, avatar, bio, privacy setting, counts, timestamps.
+
+Follow: follower and followee references, timestamp.
+
+Title: movie or series; external ID; name; year; poster/backdrop links; structured metadata (genres, people, synopsis).
+
+Post: author, attached title, media reference (image or clip), caption, optional rating, mood tags, counters (likes, comments), timestamps, moderation status.
+
+Interaction: like or comment on a post, with timestamps and minimal body for comments.
+
+List: owner, name, description, visibility, ordered items (title references).
+
+User Collections: watchlist, favorites (each is a set of title references).
+
+Event (analytics): event type, who, what, context, timestamp (append-only).
+
+5) User Flows (Step-by-Step)
+
+Onboarding
+
+Sign up (email or social).
+
+Choose handle, set avatar/bio (optional).
+
+Follow suggestions (featured tastemakers + phone contacts if permitted).
+
+Land on feed with seeded trending content.
+
+Create a Post
+
+Tap create.
+
+Pick a title (search modal).
+
+Add poster/still or ≤15s clip; auto-fit aspect; preview.
+
+Add caption (short), mood tags, optional rating.
+
+Publish → success toast → inserted into followers’ feeds.
+
+Engage in Feed
+
+Scroll; like/comment/repost/save inline.
+
+Tap title to open details or list to open collection.
+
+Encounter periodic “Because…” rec cards; tap to view details or save.
+
+Search & AI
+
+Search by name/person; refine with filters.
+
+Open AI drawer; type natural language; view ranked results with badges and short reason.
+
+Save items to Watchlist/Favorites.
+
+Lists
+
+Create list; add titles; reorder.
+
+Toggle public/private; share via link or shareable image later.
+
+6) Recommendation & Search Logic (Conceptual)
+
+Inputs
+
+Title metadata (name, year, genres, synopsis, cast/crew).
+
+User tastes (implicit: likes, saves, dwell; explicit: favorites, lists).
+
+Social proximity (friend engagement), limited to avoid echo chambers.
+
+Candidate retrieval
+
+Keyword and person match for explicit queries.
+
+Semantic similarity on themes and moods (later via embeddings; MVP can use tags and heuristics).
+
+Related titles (by cast/crew/genre/era).
+
+Scoring
+
+Match to query or user profile.
+
+Novelty boost (down-weight very recently seen or saved).
+
+Quality proxy (community engagement; simple for MVP).
+
+Diversity via slate assembly to avoid same-lane saturation.
+
+Explainability
+
+Short “Because…” reason with two or three badges (e.g., “witty banter,” “ensemble,” “’90s vibe”).
+
+Surfaces
+
+AI drawer results; occasional feed cards; title page “Related for you.”
+
+7) UX & Visual Standards
+
+Aesthetic: cinematic, dark mode first, poster-forward.
+
+Feed cards: large media, minimal chrome, clear actions; consistent spacing.
+
+Typography: bold title, subdued meta, compact caption.
+
+Motion: subtle transitions; instant tap feedback.
+
+Accessibility: high contrast, scalable text, gesture alternatives.
+
+8) Performance Targets
+
+Cold start to first feed paint: ~1–2 seconds on mid-range devices.
+
+60 fps scrolling on feed with dozens of cards.
+
+Media uploads produce visible progress within one second.
+
+Search results appear within ~400–700 ms after query submission (excluding first network warm-up).
+
+9) Safety, Privacy, and Policy
+
+Clips: ≤15 seconds, capped resolution; automatic rejection over limits.
+
+Reporting: available on every card and comment; simple reason selection.
+
+Moderation: flagged items enter a review queue; actions include remove, warn, suspend.
+
+Rate limits: posting, commenting, and follows per minute/day to prevent spam.
+
+Privacy: optional private accounts; per-post visibility can be phase-two.
+
+Data controls: delete account and content from profile settings.
+
+10) Telemetry & KPIs
+
+Activation: time to first follow; time to first post; % of new users who create or save a list within 48 hours.
+Engagement: DAU/WAU; average session length; feed scroll depth; save-to-watchlist rate; comments per post.
+Discovery quality: unique titles surfaced per user per week; share of long-tail titles; rec-card click-through.
+Safety: report rate; moderation resolution time; repeat offender rate.
+Growth: invites sent/accepted; shared links opened; creator retention.
+
+11) Phased Delivery Plan (No Code, Only Deliverables)
+Sprint 1 — Foundations & Design System (Week 1)
+
+Deliverables
+
+Brand kit (logo, color tokens, typography, icon set).
+
+High-fidelity screens for: Feed, Search, Create, Title, Profile, Lists, Notifications.
+
+Interaction specs: tap areas, gestures, transitions, empty states, error states.
+
+Technical architecture decision notes (client, backend, storage, media, search).
+Acceptance
+
+Clickable design prototype covering primary flows; documented component library.
+
+Sprint 2 — Accounts, Profiles, Social Graph (Week 2)
+
+Deliverables
+
+Auth flows (sign up/in, passwordless or social).
+
+Profile pages (public and private modes).
+
+Follow/unfollow + suggestions.
+Acceptance
+
+New user can create a profile, follow others, and see seed content in feed.
+
+Sprint 3 — Titles, Posting, and Feed (Weeks 3–4)
+
+Deliverables
+
+Title catalog integration plan (source, sync cadence, fields).
+
+Compose flow (title selection, media attach, caption, tags, rating).
+
+Feed assembly logic (friends + trending), infinite scroll.
+
+Like/comment/repost/save interactions.
+Acceptance
+
+A user can create a post tied to a title; followers see it in feed; interactions update counts in real time.
+
+Sprint 4 — Lists, Watchlist, Favorites (Week 5)
+
+Deliverables
+
+List creation and editing UX (add, remove, reorder).
+
+Watchlist and Favorites management surfaces.
+
+Title page with related titles and posts.
+Acceptance
+
+Users maintain lists; items persist; title pages feel complete and cross-linked.
+
+Sprint 5 — Discovery v0 & “Because…” Cards (Week 6)
+
+Deliverables
+
+Trending and similar-title rails; novelty and diversity rules for slate assembly.
+
+“Because you liked…” card spec with reason line and badges.
+Acceptance
+
+Feed includes lightweight recommendation cards that are believable and varied.
+
+Sprint 6 — AI Search Drawer v1 & Polish (Weeks 7–8)
+
+Deliverables
+
+Natural-language query parsing spec (moods, themes, constraints).
+
+Ranking blend spec (relevance, novelty, diversity) with explainability.
+
+Error/empty-state behaviors; skeleton loaders; accessibility audit.
+Acceptance
+
+Users type free-text movie intents and get quality results with short explanations; app meets performance and accessibility targets.
+
+Ongoing — Moderation, Analytics, Launch Prep (Parallel)
+
+Deliverables
+
+Report workflows; admin review process; takedown policy.
+
+Analytics dashboards with core KPIs; growth hooks plan (invites, shareables).
+
+Privacy policy, community guidelines, app store metadata.
+Acceptance
+
+End-to-end moderation flow works; dashboards reflect live events; store assets approved.
+
+12) Acceptance Criteria (MVP Definition of Done)
+
+A first-time user can sign up, follow at least three suggested accounts, and immediately see an engaging feed combining friend posts and discovery items.
+
+The user can create a post tied to a title with an image or short clip, add a caption and tags, and publish successfully.
+
+The user can like, comment, repost, and save titles; saved items appear in Watchlist or a chosen List.
+
+The user can open a title page, see key info and posts, and add the title to Watchlist/Favorites.
+
+The user can use standard search to find titles and the AI drawer to find recommendations by mood/theme with short “Because…” reasons.
+
+The app remains smooth (no stutters), first paint is fast, and uploads show clear progress.
+
+Reporting and basic moderation processes function; abusive behavior is limited by rate controls.
+
+Analytics capture the core funnel and engagement events necessary for iteration.
+
+13) Risks & Mitigations
+
+Copyright on clips: Strict clip limits and reporting tools; encourage posters/trailers and original commentary.
+
+Cold start feeds: Seed trending titles and curated lists; follow suggestions on onboarding.
+
+Filter bubbles: Enforce novelty/diversity; provide “see less like this” control later.
+
+Abuse/spam: Rate limits, profanity filter, quick moderation queue.
+
+Performance regressions: Continuous profiling on low-mid devices; image/video optimization strategy.
+
+14) Hand-Off Checklist for Riplit
+
+Confirm stack choices and hosting; agree on environment variable plan and secrets storage.
+
+Confirm title metadata source and field mapping (names, IDs, genres, people, images).
+
+Lock design system tokens and component specs; finalize high-fidelity flows for all primary screens.
+
+Review sprint plan and acceptance criteria; assign owners; set demo dates per sprint.
+
+Establish moderation playbook and response SLAs before beta.
+
+Define analytics events and dashboards; validate instrumentation during Sprint 5.
+
+Prepare beta cohort plan and invite mechanism; finalize app store assets.

@@ -1,0 +1,256 @@
+0) Quick recap of product decisions
+
+Catalog & images: use TMDB for movies, TV, documentaries, posters, backdrops, stills, trailers (via YouTube links in TMDB).
+
+Clips in posts (Phase 1): allow official trailer segments via YouTube embed start/end; posters/backdrops/stills from TMDB. No arbitrary uploads yet.
+
+Search: two modes
+
+Standard title/people search (TMDB-backed) everywhere, including the Create-Post flow.
+
+AI drawer: natural-language → facets → ranked candidates (still returned from our local catalog/TMDB).
+
+1) TMDB: exactly what to wire (and where)
+1.1 Environment & keys (server-side only)
+
+Provide Riplit a TMDB API key and require all TMDB calls to originate from the backend.
+
+Do not put keys in the mobile app.
+
+1.2 Catalog ingestion (to make the app feel full and fast)
+
+Nightly: refresh TMDB configuration (image base URLs & sizes).
+
+Nightly: backfill/refresh “popular,” “top rated,” and “trending day/week” for both movie and tv.
+
+Store: id, type (movie/tv), title/name, year/first_air_date, runtime/episode_count, genres, keywords, top cast/crew, poster/backdrop paths (not files), overview, language.
+
+Acceptance: opening the app cold still shows lots of real titles/posters from our database/cache without waiting on live TMDB calls.
+
+1.3 Images & trailers (for title pages and post composer)
+
+Images: build URLs using TMDB image base URL + a size (e.g., w500/w780) + file_path from the title’s images.
+
+Trailers: use the title’s videos list; prefer official YouTube “Trailer” entries.
+
+Acceptance: every title shows a real poster; many show a working trailer button; stills/backdrops are available for selection in the composer.
+
+1.4 Search behavior (global + Create-Post)
+
+Use TMDB multi-search for title and person.
+
+Filters supported: type (movie/tv), year range, genres.
+
+Pagination stable (no duplicates/holes).
+
+Return nothing-found and rate-limit friendly messages.
+
+Acceptance: typing partial strings (“godf”) returns The Godfather instantly; Create-Post search finds the same titles.
+
+2) Fix: Create-Post search isn’t working
+Symptom you reported
+
+In the Create-Post flow, searching for movies often returns nothing or spins forever.
+
+Likely causes (and what to check)
+
+Wrong endpoint: Composer may be calling a different search route than the main search screen.
+
+Missing TMDB key server-side: Composer might be hitting a route that proxies nothing (key not loaded).
+
+CORS or auth guard: Composer calls could be blocked cross-origin or behind an auth requirement the composer isn’t sending.
+
+Query shaping: Not URL-encoding user input; not passing type/language properly; filtering too aggressively (e.g., excluding adult or non-US by default).
+
+Pagination bug: Cursor/offset mismatch causing empty first page.
+
+Rate limits: Too many keystroke calls; no debounce/caching.
+
+Required fix (behavioral, no code)
+
+Unify the search path used by global search and Create-Post search (same backend route, same parameters).
+
+Ensure the backend route:
+
+pulls TMDB key from env,
+
+supports query, type, year_range, page, include_adult=false by default,
+
+debounces/short-caches identical queries for a few seconds.
+
+On the client side: only fire a request once the user types ≥2–3 characters, with a short debounce.
+
+Acceptance tests
+
+Create-Post → search “heat” shows 1995 Heat and other matches in <1s.
+
+Searching “the office” returns TV first if type=tv filter is on.
+
+Rapid typing doesn’t flood the network (inspect logs).
+
+3) Fix: AI search drawer “the AI problem” (slow, empty, or flaky)
+Common root issues
+
+Calling OpenAI from the client → CORS/key exposure/timeouts.
+
+No timeout/retry → the UI spins if OpenAI takes too long.
+
+No fallback → if parse fails, you get an empty slate.
+
+Heavy prompts → too expensive/slow; no cache.
+
+Over-quota → silently failing requests.
+
+Required architecture
+
+All AI calls happen on the backend. The client only calls our /ai/search endpoint.
+
+The backend pipeline:
+a) Parse intent (LLM): extract facets (mood, themes, tone, runtime bands, exclude/include genres, people if mentioned).
+b) Retrieve candidates from our local catalog/TMDB (lexical filters + optional semantic index when we add it).
+c) Rank & diversify (relevance + novelty + diversity; simple quality gate).
+d) Explain: generate a short “Because …” reason and 2–3 badges.
+
+Controls: per-request timeout; 1–2 retries; per-user daily token budget; cache identical normalized queries for several minutes.
+
+Fallbacks (must be implemented)
+
+If LLM parse times out or fails:
+
+Use keyword/genre heuristic parse (regex & known lists).
+
+Return a slate + templated reason (“Because [genre] + [mood]”).
+
+If OpenAI rate-limits: show a friendly “Using quick search today” message and still return results from heuristics.
+
+Acceptance tests
+
+Query: “short clever thriller like Prisoners but less bleak” returns 8–20 sensible titles, each with a one-line reason + 2–3 badges, in under ~1.5s on warm cache.
+
+Killing the OpenAI key temporarily still returns heuristic results with a message, not a spinner.
+
+4) Fix: Profile page stuck loading
+What to check
+
+Route parameter mismatch: the profile route expects handle, but caller passes id (or vice-versa).
+
+API select explosion: profile screen makes multiple serial calls (user, counts, posts, lists), and one of them never resolves or 500s.
+
+Uncaught error: the UI awaits a promise that rejects without an error boundary → infinite spinner.
+
+N+1 feed on profile: pulling full media/related for each post on profile grid (too heavy), causing timeouts.
+
+Auth requirement: profile route accidentally gated behind auth check on public profiles.
+
+Required fix (behavior + states)
+
+Single profile bootstrap request that returns: user core, counts, latest N posts (id, media preview, title name/year), and pointers to Watchlist/Favorites/Lists. Defer heavy data (full comments, large media) to on-demand calls.
+
+Implement robust loading states and error states (message + retry) rather than infinite spinners.
+
+Add a hard timeout for the profile bootstrap request (e.g., a few seconds), after which show error state with Retry.
+
+Ensure public profiles don’t require auth; private profiles show a friendly lock state.
+
+Acceptance tests
+
+Opening any profile paints header (avatar, handle) quickly, then the grid; if the posts sub-call fails, the header still renders with a retry on the grid.
+
+Bad handle shows a “Profile not found” state in <1s.
+
+5) Post Composer – Media Picker (TMDB only, now)
+What users can attach (no uploads yet)
+
+Poster / Backdrop / Still: pulled from TMDB images for the selected title (and episode for TV).
+
+Trailer segment: pick an official YouTube trailer from the title’s videos; let the user set start/end seconds (short segment); embed only.
+
+UX flow
+
+Pick Title (TMDB search).
+
+Choose Media Type (Poster / Backdrop/Still / Trailer segment).
+
+Select asset (gallery of posters/backdrops/stills; list of official trailers).
+
+If trailer: set start/end within the embed; cap visualized segment to a short duration.
+
+Add caption (short), optional rating, mood tags.
+
+Publish (store references, not files).
+
+Acceptance: a user can create a post with a real poster in under 30 seconds; can also post a short trailer segment that plays inline via embed.
+
+6) Monitoring, rate-limits, and empty states (so it doesn’t regress)
+
+TMDB: add short cache for identical queries; log when rate limit headers approach thresholds; show “Too many searches—please try again” only if strictly necessary.
+
+AI: log parse failures, timeouts, token use; turn on a circuit breaker that forces heuristic mode if error rates spike.
+
+Empty states:
+
+Search with no results → suggest altering filters; show trending seed.
+
+Profile with no posts → show “Create your first post” prompt.
+
+Feed with no friends → show curated/trending and “Follow creators” module.
+
+7) Final Handoff Checklist (Riplit can tick these off)
+
+TMDB
+
+ Server has TMDB key; config endpoint refreshed nightly.
+
+ Backfill cached catalog (popular, top rated, trending for movie+tv).
+
+ Title pages show posters/backdrops; trailers play from official YouTube links.
+
+Create-Post Search
+
+ Composer uses the same backend search route as global search.
+
+ Debounce ≥300–500ms; min 2–3 characters; helpful empty states.
+
+ Finds any movie/TV with posters visible; pagination stable.
+
+AI Drawer
+
+ Client calls only /ai/search on the backend.
+
+ Backend: parse → retrieve → rank → explain; timeouts, retries, caching.
+
+ Heuristic fallback works when OpenAI is unavailable.
+
+ Short reasons + 2–3 badges appear on results.
+
+Profile Screen
+
+ Single bootstrap payload; header paints first, grid lazy-loads.
+
+ Robust error/timeout states; no infinite spinner.
+
+ Public vs private behavior verified.
+
+Media Picker
+
+ Poster/Backdrop/Still galleries from TMDB images.
+
+ Trailer segment via YouTube embed with start/end; short segment cap.
+
+ No file upload path exposed in Phase 1.
+
+Monitoring & Legal
+
+ Logs for rate-limits, AI failures, cache hit ratios.
+
+ TMDB attribution visible in app “About/Settings”.
+
+8) What I did earlier (context for Riplit)
+
+We pivoted away from streaming-account linking (no stable APIs) and committed to a standalone social + discovery app.
+
+We set TMDB as the single source of truth for titles, images, and trailer links, and designed a media picker inside the composer so posts always attach to real titles.
+
+We defined an AI search drawer that parses a natural-language intent server-side and returns diverse, explainable results, with heuristic fallback if the model is unavailable.
+
+We specified policies (no downloading YouTube, embed only; strict clip limits) and acceptance criteria for each feature.
