@@ -11,7 +11,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  
+  const hasDb = !!process.env.DATABASE_URL;
+  const hasTmdb = !!process.env.TMDB_API_KEY;
 
   // ---- HEALTH CHECK (no auth) -----------------------------------
   app.get("/api/health", (_req, res) => {
@@ -19,8 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: "ok",
       env: process.env.NODE_ENV || "development",
       hasOpenAI: !!process.env.OPENAI_API_KEY,
-      hasDb: !!process.env.DATABASE_URL,
-      hasTmdb: !!process.env.TMDB_API_KEY,
+      hasDb,
+      hasTmdb,
     });
   });
 
@@ -33,6 +34,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+
+      // NO DB? Return a synthetic user so the app loads,
+      // and avoid calling storage.getUser (which triggers the Neon client).
+      if (!hasDb) {
+        return res.json({
+          id: userId,
+          username: req.user.claims.username || "dev",
+          displayName: "Dev User",
+          bio: "Local dev user (no DB)",
+        });
+      }
+
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
