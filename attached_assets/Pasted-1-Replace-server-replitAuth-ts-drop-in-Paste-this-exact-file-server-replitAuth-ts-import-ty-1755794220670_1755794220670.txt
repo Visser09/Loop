@@ -1,0 +1,122 @@
+1) Replace server/replitAuth.ts (drop-in)
+
+Paste this exact file:
+
+// server/replitAuth.ts
+import type { Express, Request, Response, NextFunction } from "express";
+
+/**
+ * setupAuth:
+ * - If Replit forwards user headers, populate req.user
+ * - No Passport, no sessions; just lightweight header-based auth
+ */
+export async function setupAuth(app: Express) {
+  app.use((req: any, _res: Response, next: NextFunction) => {
+    // If Replit provided user headers, trust them
+    const uid =
+      req.get("X-Replit-User-Id") ||
+      req.get("x-replit-user-id") ||
+      req.headers["x-replit-user-id"];
+
+    const uname =
+      (req.get("X-Replit-User-Name") ||
+        req.get("x-replit-user-name") ||
+        (req.headers["x-replit-user-name"] as string)) ?? undefined;
+
+    if (uid && !req.user) {
+      req.user = { claims: { sub: String(uid), username: uname || "replit" } };
+    }
+    next();
+  });
+}
+
+/**
+ * isAuthenticated:
+ * - In production: require req.user
+ * - In development: inject a fake user so you can build without full auth flow
+ *   (You can also pass Authorization: Bearer DEV to force the dev user.)
+ */
+export function isAuthenticated(req: any, res: Response, next: NextFunction) {
+  // Already authenticated (from Replit headers or earlier middleware)
+  if (req.user?.claims?.sub) return next();
+
+  // Allow a bearer DEV token to short-circuit in any env if you want
+  const auth = req.get("Authorization");
+  if (auth && auth.startsWith("Bearer ") && auth.slice(7).trim().toUpperCase() === "DEV") {
+    req.user = { claims: { sub: "dev-user", username: "dev" } };
+    return next();
+  }
+
+  // In dev, auto-inject a user so Preview works
+  if (process.env.NODE_ENV !== "production") {
+    req.user = { claims: { sub: "dev-user", username: "dev" } };
+    return next();
+  }
+
+  // Production and no user => block
+  return res.status(401).json({ message: "Unauthenticated" });
+}
+
+
+You don’t need Passport anymore. This removes the “Unknown authentication strategy” entirely.
+
+2) Keep your existing routes.ts as-is
+
+You already do:
+
+await setupAuth(app);
+// ...
+app.get('/api/auth/user', isAuthenticated, ...)
+
+
+That will now work in dev (fake user) and in prod (Replit headers).
+
+3) Add/keep the simple health + helpful login hint (optional)
+
+Near the top of registerRoutes (after await setupAuth(app)):
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    env: process.env.NODE_ENV || "development",
+    hasOpenAI: !!process.env.OPENAI_API_KEY,
+    hasDb: !!process.env.DATABASE_URL,
+    hasTmdb: !!process.env.TMDB_API_KEY,
+  });
+});
+
+app.get("/api/login", (_req, res) => {
+  res.status(405).json({ error: "Use GET /api/auth/user after auth. Login is handled upstream." });
+});
+
+4) Make sure you run in dev for Preview
+
+Replit Run command:
+
+cd CineLoop && NODE_ENV=development npm run dev
+
+5) Test quickly
+
+In the Replit shell (Preview URL is auto-injected as $REPLIT_APP_URL in some templates; otherwise use the URL shown in logs):
+
+curl -sS $REPLIT_APP_URL/api/health
+
+# Should return a user now (dev shim)
+curl -sS $REPLIT_APP_URL/api/auth/user
+
+# Or force with a header in any env:
+curl -sS -H "Authorization: Bearer DEV" $REPLIT_APP_URL/api/auth/user
+
+6) About “it’s not asking me for API codes”
+
+Your app doesn’t prompt for keys. It reads them from environment variables. Missing keys used to crash; we added guards so it won’t. If you want AI/TMDB live:
+
+Add in Secrets:
+
+OPENAI_API_KEY
+
+TMDB_API_KEY
+
+(optional) DATABASE_URL
+
+If they’re absent, the AI/TMDB endpoints should now return 503 with a clear message instead of crashing.
