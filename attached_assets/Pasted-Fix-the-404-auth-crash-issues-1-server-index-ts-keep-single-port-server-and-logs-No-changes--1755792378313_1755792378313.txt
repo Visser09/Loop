@@ -1,0 +1,118 @@
+Fix the 404 + auth + crash issues
+1) server/index.ts — keep single‑port server and logs
+
+No changes needed other than making sure we listen on process.env.PORT (already done).
+
+2) server/routes.ts — add health, dev‑auth shim, and friendly /api/login hint
+
+Edit this file and insert the following snippets in the indicated spots.
+
+2.1 Add a dev auth shim (before any isAuthenticated routes)
+// DEV AUTH SHIM: allow Preview to work without Replit auth finishing.
+// Only active when not in production.
+if (process.env.NODE_ENV !== "production") {
+  app.use((req: any, _res, next) => {
+    if (!req.user) req.user = { claims: { sub: "dev-user", username: "dev" } };
+    next();
+  });
+}
+
+2.2 Add a health endpoint (no auth)
+
+Put near the top, right after await setupAuth(app);
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    env: process.env.NODE_ENV || "development",
+    hasOpenAI: !!process.env.OPENAI_API_KEY,
+    hasDb: !!process.env.DATABASE_URL,
+    hasTmdb: !!process.env.TMDB_API_KEY,
+  });
+});
+
+2.3 Add a helpful GET handler for /api/login
+
+(You don’t actually use /api/login, but this stops people opening it in a browser and seeing 404.)
+
+app.get("/api/login", (_req, res) => {
+  res.status(405).json({ error: "Use GET /api/auth/user after auth. Login is handled by Replit." });
+});
+
+2.4 Guard AI/TMDB routes so missing keys don’t crash
+
+Wrap at the top of each AI/TMDB endpoint:
+
+For /api/ai/chat:
+
+if (!process.env.OPENAI_API_KEY) {
+  return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+}
+
+
+For /api/ai/search:
+
+if (!process.env.OPENAI_API_KEY) {
+  return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+}
+
+
+For /api/search (TMDB):
+
+if (!process.env.TMDB_API_KEY) {
+  // Fallback to local DB search only if TMDB key is missing
+  try {
+    const query = String(req.query.q || "");
+    const limit = parseInt(String(req.query.limit || 20));
+    const local = await storage.searchTitles(query, limit);
+    return res.json(local);
+  } catch {
+    return res.json([]);
+  }
+}
+
+
+(Leave your existing logic below these guards unchanged.)
+
+2.5 (Optional) Replace isAuthenticated with a dev‑safe alias
+
+If you prefer not to use the shim, make a wrapper:
+
+const requireAuth =
+  process.env.NODE_ENV === "production"
+    ? isAuthenticated
+    : (_req: any, _res: any, next: any) => next();
+
+// Then change every route that currently uses `isAuthenticated` to `requireAuth`.
+
+3) Replit Secrets (to stop “exited with code 1”)
+
+Add these (even temporary values prevent crashes while guards are in place):
+
+OPENAI_API_KEY (real key if you want AI endpoints live)
+
+TMDB_API_KEY (real key if you want search to hit TMDB)
+
+DATABASE_URL (optional—if missing, your storage layer must handle it gracefully)
+
+4) How to test in the Replit Console
+# Health (works without auth)
+curl -sS $REPLIT_APP_URL/api/health
+
+# Auth check (works with dev shim; in prod requires real Replit auth)
+curl -sS $REPLIT_APP_URL/api/auth/user
+
+5) What URL to open
+
+Your app serves client + API on the same port = process.env.PORT (default 3001).
+Open the root Replit URL it shows in logs (not /api/login). Let the frontend call /api/....
+
+Why this fixes your issues
+
+404 on /api/login: you don’t have that route; the hint route clarifies usage and avoids confusion.
+
+Random server exit (code 1): usually thrown by missing API keys—guards prevent crashes.
+
+Preview blocked by auth: dev shim (or requireAuth) lets you build without full Replit auth flow.
+
+“Which port?”: everything runs on Replit’s PORT, so Preview just works.
