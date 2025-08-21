@@ -46,27 +46,28 @@ interface TMDBConfiguration {
 }
 
 class TMDBService {
-  private apiKey: string;
+  private apiKey: string | undefined;
   private genreCache: Map<number, string> = new Map();
   private configCache: TMDBConfiguration | null = null;
 
   constructor() {
-    if (!process.env.TMDB_API_KEY) {
-      throw new Error("TMDB_API_KEY environment variable is required");
-    }
     this.apiKey = process.env.TMDB_API_KEY;
   }
 
   private async makeRequest<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
+    if (!this.apiKey) {
+      throw new Error("TMDB_API_KEY is not set. TMDB service is unavailable.");
+    }
+
     const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
     url.searchParams.set("api_key", this.apiKey);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.set(key, value);
     });
 
     const response = await fetch(url.toString());
-    
+
     if (!response.ok) {
       throw new Error(`TMDB API error: ${response.status} ${response.statusText}`);
     }
@@ -84,6 +85,8 @@ class TMDBService {
   }
 
   async loadGenres(): Promise<void> {
+    if (!this.apiKey) return; // Skip if API key is not set
+
     const [movieGenres, tvGenres] = await Promise.all([
       this.makeRequest<{ genres: TMDBGenre[] }>("/genre/movie/list"),
       this.makeRequest<{ genres: TMDBGenre[] }>("/genre/tv/list")
@@ -104,6 +107,9 @@ class TMDBService {
   }
 
   private async getCredits(id: number, type: "movie" | "tv"): Promise<TMDBCredits> {
+    if (!this.apiKey) {
+      return { cast: [], crew: [] }; // Return empty if not available
+    }
     return this.makeRequest<TMDBCredits>(`/${type}/${id}/credits`);
   }
 
@@ -145,8 +151,10 @@ class TMDBService {
   }
 
   async getTrending(timeWindow: "day" | "week" = "day"): Promise<Partial<Title>[]> {
+    if (!this.apiKey) return []; // Return empty if not available
+
     const response = await this.makeRequest<{ results: TMDBTitle[] }>(`/trending/all/${timeWindow}`);
-    
+
     return Promise.all(
       response.results.slice(0, 20).map(async (tmdbTitle) => {
         const type = tmdbTitle.media_type === "tv" ? "tv" : "movie";
@@ -157,8 +165,10 @@ class TMDBService {
   }
 
   async getPopular(type: "movie" | "tv"): Promise<Partial<Title>[]> {
+    if (!this.apiKey) return []; // Return empty if not available
+
     const response = await this.makeRequest<{ results: TMDBTitle[] }>(`/${type}/popular`);
-    
+
     return Promise.all(
       response.results.slice(0, 20).map(async (tmdbTitle) => {
         const credits = await this.getCredits(tmdbTitle.id, type);
@@ -168,8 +178,10 @@ class TMDBService {
   }
 
   async getTopRated(type: "movie" | "tv"): Promise<Partial<Title>[]> {
+    if (!this.apiKey) return []; // Return empty if not available
+
     const response = await this.makeRequest<{ results: TMDBTitle[] }>(`/${type}/top_rated`);
-    
+
     return Promise.all(
       response.results.slice(0, 20).map(async (tmdbTitle) => {
         const credits = await this.getCredits(tmdbTitle.id, type);
@@ -179,6 +191,8 @@ class TMDBService {
   }
 
   async searchTitles(query: string): Promise<Partial<Title>[]> {
+    if (!this.apiKey) return []; // Return empty if not available
+
     const response = await this.makeRequest<{ results: TMDBTitle[] }>("/search/multi", {
       query: encodeURIComponent(query)
     });
@@ -196,6 +210,8 @@ class TMDBService {
   }
 
   async getTitle(id: number, type: "movie" | "tv"): Promise<Partial<Title> | null> {
+    if (!this.apiKey) return null; // Return null if not available
+
     try {
       const [tmdbTitle, credits] = await Promise.all([
         this.makeRequest<TMDBTitle>(`/${type}/${id}`),
@@ -210,8 +226,10 @@ class TMDBService {
   }
 
   async getSimilar(id: number, type: "movie" | "tv"): Promise<Partial<Title>[]> {
+    if (!this.apiKey) return []; // Return empty if not available
+
     const response = await this.makeRequest<{ results: TMDBTitle[] }>(`/${type}/${id}/similar`);
-    
+
     return Promise.all(
       response.results.slice(0, 10).map(async (tmdbTitle) => {
         const credits = await this.getCredits(tmdbTitle.id, type);
@@ -223,5 +241,7 @@ class TMDBService {
 
 export const tmdbService = new TMDBService();
 
-// Initialize genres on startup
-tmdbService.loadGenres().catch(console.error);
+// Initialize genres on startup if TMDB_API_KEY is set
+if (process.env.TMDB_API_KEY) {
+  tmdbService.loadGenres().catch(console.error);
+}
