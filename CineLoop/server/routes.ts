@@ -11,17 +11,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // ---- DEV AUTH SHIM (only in dev) ------------------------------
-  // Lets Preview work without Replit completing auth.
-  // It pre-populates req.user so `isAuthenticated` will pass.
-  if (process.env.NODE_ENV !== "production") {
-    app.use("/api", (req: any, _res, next) => {
-      if (!req.user) {
-        req.user = { claims: { sub: "dev-user", username: "dev" } };
-      }
-      next();
-    });
-  }
+  
 
   // ---- HEALTH CHECK (no auth) -----------------------------------
   app.get("/api/health", (_req, res) => {
@@ -35,10 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ---- FRIENDLY HINT FOR /api/login -----------------------------
-  // You don't actually have a login route; auth is via /api/auth/user.
-  // This prevents a 404 when someone visits /api/login in the browser.
   app.get("/api/login", (_req, res) => {
-    res.status(405).json({ error: "Use GET /api/auth/user (after auth). Login is handled by Replit." });
+    res.status(405).json({ error: "Use GET /api/auth/user after auth. Login is handled upstream." });
   });
 
   // API routes

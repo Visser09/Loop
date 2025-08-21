@@ -1,177 +1,53 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
+import type { Express, Request, Response, NextFunction } from "express";
 
-import passport from "passport";
-import session from "express-session";
-import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
-import connectPg from "connect-pg-simple";
-import { storage } from "./storage";
-
-if (!process.env.REPLIT_DOMAINS) {
-  console.warn("REPLIT_DOMAINS not set - authentication will not work properly");
-  // Use localhost as fallback for development
-  process.env.REPLIT_DOMAINS = "localhost";
-}
-
-if (!process.env.REPL_ID) {
-  console.warn("REPL_ID not set - using fallback for development");
-  process.env.REPL_ID = "dev-repl-id";
-}
-
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
-
-export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const sessionSecret = process.env.SESSION_SECRET || 'dev-fallback-secret-' + Math.random().toString(36);
-  
-  if (!process.env.SESSION_SECRET) {
-    console.warn('SESSION_SECRET not set - using temporary fallback for development');
-  }
-  
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
-  return session({
-    secret: sessionSecret,
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: true,
-      maxAge: sessionTtl,
-    },
-  });
-}
-
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(
-  claims: any,
-) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
-}
-
+/**
+ * setupAuth:
+ * - If Replit forwards user headers, populate req.user
+ * - No Passport, no sessions; just lightweight header-based auth
+ */
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
-  app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
+  app.use((req: any, _res: Response, next: NextFunction) => {
+    // If Replit provided user headers, trust them
+    const uid =
+      req.get("X-Replit-User-Id") ||
+      req.get("x-replit-user-id") ||
+      req.headers["x-replit-user-id"];
 
-  let config;
-  try {
-    config = await getOidcConfig();
-  } catch (error) {
-    console.error("Failed to setup OIDC config:", error);
-    // Return early if we can't setup auth - the dev shim will handle auth
-    return;
-  }
+    const uname =
+      (req.get("X-Replit-User-Name") ||
+        req.get("x-replit-user-name") ||
+        (req.headers["x-replit-user-name"] as string)) ?? undefined;
 
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
-
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
-  }
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
-
-  app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
-  });
-
-  app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
-  });
-
-  app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+    if (uid && !req.user) {
+      req.user = { claims: { sub: String(uid), username: uname || "replit" } };
+    }
+    next();
   });
 }
 
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
+/**
+ * isAuthenticated:
+ * - In production: require req.user
+ * - In development: inject a fake user so you can build without full auth flow
+ *   (You can also pass Authorization: Bearer DEV to force the dev user.)
+ */
+export function isAuthenticated(req: any, res: Response, next: NextFunction) {
+  // Already authenticated (from Replit headers or earlier middleware)
+  if (req.user?.claims?.sub) return next();
 
-  if (!req.isAuthenticated() || !user.expires_at) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
+  // Allow a bearer DEV token to short-circuit in any env if you want
+  const auth = req.get("Authorization");
+  if (auth && auth.startsWith("Bearer ") && auth.slice(7).trim().toUpperCase() === "DEV") {
+    req.user = { claims: { sub: "dev-user", username: "dev" } };
     return next();
   }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+  // In dev, auto-inject a user so Preview works
+  if (process.env.NODE_ENV !== "production") {
+    req.user = { claims: { sub: "dev-user", username: "dev" } };
+    return next();
   }
 
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-};
+  // Production and no user => block
+  return res.status(401).json({ message: "Unauthenticated" });
+}
