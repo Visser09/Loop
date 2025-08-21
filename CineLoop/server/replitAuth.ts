@@ -9,7 +9,14 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.warn("REPLIT_DOMAINS not set - authentication will not work properly");
+  // Use localhost as fallback for development
+  process.env.REPLIT_DOMAINS = "localhost";
+}
+
+if (!process.env.REPL_ID) {
+  console.warn("REPL_ID not set - using fallback for development");
+  process.env.REPL_ID = "dev-repl-id";
 }
 
 const getOidcConfig = memoize(
@@ -78,7 +85,14 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  let config;
+  try {
+    config = await getOidcConfig();
+  } catch (error) {
+    console.error("Failed to setup OIDC config:", error);
+    // Return early if we can't setup auth - the dev shim will handle auth
+    return;
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
