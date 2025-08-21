@@ -620,35 +620,3 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
-import { Express } from "express";
-import { createServer } from "http";
-
-export async function registerRoutes(app: Express) {
-  const server = createServer(app);
-
-  // Health check endpoint
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
-  // Search endpoint
-  app.get("/api/search", (req, res) => {
-    const { q } = req.query;
-    // TODO: Implement search logic
-    res.json([]);
-  });
-
-  // Trending titles endpoint
-  app.get("/api/titles/trending", (req, res) => {
-    // TODO: Implement trending logic
-    res.json([]);
-  });
-
-  // Posts endpoint
-  app.get("/api/posts", (req, res) => {
-    // TODO: Implement posts logic
-    res.json([]);
-  });
-
-  return server;
-}
