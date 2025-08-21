@@ -111,7 +111,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
             <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] ${message.role === "user" ? "bg-cine-blue text-white" : "bg-cine-gray text-cine-text"} rounded-lg p-3`}>
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                
+
                 {/* AI Recommendations */}
                 {message.recommendations && message.recommendations.length > 0 && (
                   <div className="mt-4 space-y-3">
@@ -131,7 +131,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
                                 {rec.type === "tv" ? <Tv className="w-4 h-4 text-cine-muted" /> : <Film className="w-4 h-4 text-cine-muted" />}
                               </div>
                             )}
-                            
+
                             <div className="flex-1 min-w-0">
                               <Link 
                                 href={rec.id ? `/title/${rec.id}` : "#"}
@@ -141,7 +141,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
                                   {rec.name}
                                 </h4>
                               </Link>
-                              
+
                               <div className="flex items-center space-x-2 mt-1">
                                 {rec.year && (
                                   <span className="text-xs text-cine-muted">{rec.year}</span>
@@ -190,14 +190,14 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
                     ))}
                   </div>
                 )}
-                
+
                 <p className="text-xs text-cine-muted/60 mt-2">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
           ))}
-          
+
           {/* Loading indicator */}
           {chatMutation.isPending && (
             <div className="flex justify-start">
@@ -232,7 +232,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        
+
         {/* Suggestions */}
         <div className="mt-2 flex flex-wrap gap-2">
           {[
@@ -254,43 +254,6 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
           ))}
         </div>
       </form>
-    </div>
-  );
-}
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send } from "lucide-react";
-
-interface ConversationalSearchProps {
-  onClose: () => void;
-}
-
-export default function ConversationalSearch({ onClose }: ConversationalSearchProps) {
-  return (
-    <div className="space-y-4">
-      <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold">AI Movie Assistant</h3>
-        <p className="text-sm text-muted-foreground">
-          Ask me anything about movies and TV shows
-        </p>
-      </div>
-      
-      <Card className="p-4">
-        <p className="text-sm text-muted-foreground">
-          AI conversation feature coming soon!
-        </p>
-      </Card>
-
-      <div className="flex gap-2">
-        <Textarea 
-          placeholder="Ask about movies, actors, genres..."
-          className="flex-1"
-        />
-        <Button size="icon">
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 }

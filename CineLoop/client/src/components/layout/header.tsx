@@ -36,7 +36,7 @@ export default function Header({
           )}
           <h1 className="text-xl font-bold text-cine-text">{title}</h1>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {showSearch && (
             <Button 
@@ -55,26 +55,6 @@ export default function Header({
             className="p-2 hover:bg-cine-gray/30 rounded-full transition-colors"
           >
             <Bell className="w-5 h-5 text-cine-text" />
-          </Button>
-        </div>
-      </div>
-    </header>
-  );
-}
-import { Button } from "@/components/ui/button";
-import { Search, Bell } from "lucide-react";
-
-export default function Header() {
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b">
-      <div className="container max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-primary">CineLoop</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
           </Button>
         </div>
       </div>

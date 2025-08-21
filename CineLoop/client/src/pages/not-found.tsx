@@ -19,24 +19,3 @@ export default function NotFound() {
     </div>
   );
 }
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useLocation } from "wouter";
-
-export default function NotFoundPage() {
-  const [, setLocation] = useLocation();
-
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 text-center space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold">404</h1>
-          <p className="text-muted-foreground">Page not found</p>
-        </div>
-        <Button onClick={() => setLocation("/")} className="w-full">
-          Go Home
-        </Button>
-      </Card>
-    </div>
-  );
-}

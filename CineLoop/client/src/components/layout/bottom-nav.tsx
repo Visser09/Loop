@@ -71,38 +71,3 @@ export default function BottomNav() {
     </nav>
   );
 }
-import { Button } from "@/components/ui/button";
-import { Home, Search, Plus, User } from "lucide-react";
-import { useLocation } from "wouter";
-
-export default function BottomNav() {
-  const [location, setLocation] = useLocation();
-
-  const navItems = [
-    { icon: Home, label: "Home", path: "/home" },
-    { icon: Search, label: "Search", path: "/search" },
-    { icon: Plus, label: "Create", path: "/create" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t">
-      <div className="container max-w-2xl mx-auto px-4 h-16 flex items-center justify-around">
-        {navItems.map(({ icon: Icon, label, path }) => (
-          <Button
-            key={path}
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocation(path)}
-            className={`flex flex-col items-center gap-1 h-auto py-2 ${
-              location === path ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span className="text-xs">{label}</span>
-          </Button>
-        ))}
-      </div>
-    </nav>
-  );
-}

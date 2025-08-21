@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -367,24 +368,6 @@ export default function Create() {
         </Dialog>
       </main>
 
-      <BottomNav />
-    </div>
-  );
-}
-import Header from "@/components/layout/header";
-import BottomNav from "@/components/layout/bottom-nav";
-import { Card } from "@/components/ui/card";
-
-export default function CreatePage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container max-w-2xl mx-auto px-4 pt-16 pb-20">
-        <Card className="p-6 text-center">
-          <h2 className="text-2xl font-bold mb-2">Create Post</h2>
-          <p className="text-muted-foreground">Post creation coming soon!</p>
-        </Card>
-      </main>
       <BottomNav />
     </div>
   );

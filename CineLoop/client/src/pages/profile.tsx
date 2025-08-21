@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/header";
 import BottomNav from "@/components/layout/bottom-nav";
@@ -221,24 +222,6 @@ export default function Profile() {
         </Tabs>
       </main>
 
-      <BottomNav />
-    </div>
-  );
-}
-import Header from "@/components/layout/header";
-import BottomNav from "@/components/layout/bottom-nav";
-import { Card } from "@/components/ui/card";
-
-export default function ProfilePage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container max-w-2xl mx-auto px-4 pt-16 pb-20">
-        <Card className="p-6 text-center">
-          <h2 className="text-2xl font-bold mb-2">Profile</h2>
-          <p className="text-muted-foreground">Profile page coming soon!</p>
-        </Card>
-      </main>
       <BottomNav />
     </div>
   );
