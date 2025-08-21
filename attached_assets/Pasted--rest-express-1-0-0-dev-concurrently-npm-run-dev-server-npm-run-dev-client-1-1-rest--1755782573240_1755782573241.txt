@@ -1,0 +1,160 @@
+
+> rest-express@1.0.0 dev
+> concurrently "npm run dev:server" "npm run dev:client"
+
+[1] 
+[1] > rest-express@1.0.0 dev:client
+[1] > vite --host 0.0.0.0 --port 3000
+[1] 
+[0] 
+[0] > rest-express@1.0.0 dev:server
+[0] > NODE_ENV=development tsx server/index.ts
+[0] 
+[1] 
+[1]   VITE v5.4.19  ready in 1276 ms
+[1] 
+[1]   ➜  Local:   http://localhost:3000/
+[1]   ➜  Network: http://172.31.112.2:3000/
+[0] DATABASE_URL is not set - database functionality will be limited
+[0] /home/runner/workspace/CineLoop/node_modules/openai/src/client.ts:343
+[0]       throw new Errors.OpenAIError(
+[0]             ^
+[0] 
+[0] 
+[0] OpenAIError: The OPENAI_API_KEY environment variable is missing or empty; either provide it, or instantiate the OpenAI client with an apiKey option, like new OpenAI({ apiKey: 'My API Key' }).
+[0]     at new OpenAI (/home/runner/workspace/CineLoop/node_modules/openai/src/client.ts:343:13)
+[0]     at <anonymous> (/home/runner/workspace/CineLoop/server/openai.ts:4:16)
+[0]     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+[0]     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+[0]     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+[0] 
+[0] Node.js v20.19.3
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/main.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[0] npm run dev:server exited with code 1
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/App.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/toaster.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/tooltip.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/landing.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/home.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/create.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/profile.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/title.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/not-found.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/pages/search.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/layout/header.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/layout/bottom-nav.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/button.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/badge.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/separator.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/feed/post-card.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/textarea.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/input.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/form.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/dialog.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/feed/ai-recommendation-card.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/create/movie-clips.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/card.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/tabs.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/modals/ai-drawer.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ai/conversational-search.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/feed/trending-section.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/toast.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+[1]   npx update-browserslist-db@latest
+[1]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/label.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] [replit-cartographer] Error processing /home/runner/workspace/CineLoop/client/src/components/ui/scroll-area.tsx: TypeError: traverse is not a function
+[1]     at TransformPluginContext.transform (file:///home/runner/workspace/CineLoop/node_modules/@replit/vite-plugin-cartographer/dist/index.mjs:53:9)
+[1]     at async PluginContainer.transform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+[1]     at async loadAndTransform (file:///home/runner/workspace/CineLoop/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+[1] npm run dev:client exited with code SIGHUP
