@@ -1,7 +1,13 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai: OpenAI | null = null;
+
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+} else {
+  console.warn('OPENAI_API_KEY is not set - AI features will be disabled');
+}
 
 export interface MovieRecommendation {
   title: string;
@@ -22,6 +28,14 @@ export class OpenAIService {
     userMessage: string,
     conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
   ): Promise<ConversationalResponse> {
+    if (!openai) {
+      return {
+        message: "AI recommendations are currently unavailable. Please configure your OpenAI API key.",
+        recommendations: [],
+        conversationContinues: false
+      };
+    }
+    
     try {
       const systemPrompt = `You are a knowledgeable movie and TV show enthusiast who helps people discover content they'll love. You have extensive knowledge of movies and TV shows from all eras, genres, and regions.
 
@@ -82,6 +96,11 @@ Your response should suggest comedies with heart, explain why each fits, and may
     query: string,
     context?: string
   ): Promise<MovieRecommendation[]> {
+    if (!openai) {
+      console.warn('OpenAI not available for search');
+      return [];
+    }
+    
     try {
       const prompt = `Find movies and TV shows that match this search: "${query}"
       ${context ? `Additional context: ${context}` : ""}
