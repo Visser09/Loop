@@ -11,6 +11,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // ---- DEV AUTH SHIM (only in dev) ------------------------------
+  // Lets Preview work without Replit completing auth.
+  // It pre-populates req.user so `isAuthenticated` will pass.
+  if (process.env.NODE_ENV !== "production") {
+    app.use("/api", (req: any, _res, next) => {
+      if (!req.user) {
+        req.user = { claims: { sub: "dev-user", username: "dev" } };
+      }
+      next();
+    });
+  }
+
+  // ---- HEALTH CHECK (no auth) -----------------------------------
   app.get("/api/health", (_req, res) => {
     res.json({
       status: "ok",
@@ -21,17 +34,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // DEV AUTH SHIM: allow Preview to work without Replit auth finishing.
-  // Only active when not in production.
-  if (process.env.NODE_ENV !== "production") {
-    app.use((req: any, _res, next) => {
-      if (!req.user) req.user = { claims: { sub: "dev-user", username: "dev" } };
-      next();
-    });
-  }
-
+  // ---- FRIENDLY HINT FOR /api/login -----------------------------
+  // You don't actually have a login route; auth is via /api/auth/user.
+  // This prevents a 404 when someone visits /api/login in the browser.
   app.get("/api/login", (_req, res) => {
-    res.status(405).json({ error: "Use GET /api/auth/user after auth. Login is handled by Replit." });
+    res.status(405).json({ error: "Use GET /api/auth/user (after auth). Login is handled by Replit." });
   });
 
   // API routes
@@ -287,6 +294,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query) {
         res.status(400).json({ message: "Search query required" });
         return;
+      }
+
+      if (!process.env.TMDB_API_KEY) {
+        // Fallback: local DB search only
+        try {
+          const q = String(req.query.q || "");
+          const limit = parseInt(String(req.query.limit || 20));
+          const local = await storage.searchTitles(q, limit);
+          return res.json(local);
+        } catch {
+          return res.json([]); // don't crash
+        }
       }
 
       // Use TMDB multi-search directly as specified in requirements
