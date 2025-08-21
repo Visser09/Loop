@@ -1,0 +1,103 @@
+1) CineLoop/server/routes.ts — add dev-auth shim, health route, and a friendly /api/login handler
+
+Insert right after await setupAuth(app); (near the top of registerRoutes):
+
+// ---- DEV AUTH SHIM (only in dev) ------------------------------
+// Lets Preview work without Replit completing auth.
+// It pre-populates req.user so `isAuthenticated` will pass.
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api", (req: any, _res, next) => {
+    if (!req.user) {
+      req.user = { claims: { sub: "dev-user", username: "dev" } };
+    }
+    next();
+  });
+}
+
+// ---- HEALTH CHECK (no auth) -----------------------------------
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    env: process.env.NODE_ENV || "development",
+    hasOpenAI: !!process.env.OPENAI_API_KEY,
+    hasDb: !!process.env.DATABASE_URL,
+    hasTmdb: !!process.env.TMDB_API_KEY,
+  });
+});
+
+// ---- FRIENDLY HINT FOR /api/login -----------------------------
+// You don't actually have a login route; auth is via /api/auth/user.
+// This prevents a 404 when someone visits /api/login in the browser.
+app.get("/api/login", (_req, res) => {
+  res.status(405).json({ error: "Use GET /api/auth/user (after auth). Login is handled by Replit." });
+});
+
+2) Guard AI/TMDB endpoints so missing keys never crash
+
+Add at the top of the handler bodies:
+
+In /api/ai/chat:
+
+if (!process.env.OPENAI_API_KEY) {
+  return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+}
+
+
+In /api/ai/search:
+
+if (!process.env.OPENAI_API_KEY) {
+  return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+}
+
+
+In /api/search (TMDB):
+
+if (!process.env.TMDB_API_KEY) {
+  // Fallback: local DB search only
+  try {
+    const q = String(req.query.q || "");
+    const limit = parseInt(String(req.query.limit || 20));
+    const local = await storage.searchTitles(q, limit);
+    return res.json(local);
+  } catch {
+    return res.json([]); // don't crash
+  }
+}
+
+3) CineLoop/server/index.ts — keep the single-port server
+
+Make sure it already listens on process.env.PORT (default 3001 in your file). Do NOT hard-code 5000. Replit only exposes PORT.
+No other changes needed.
+
+4) Replit “Run” command
+
+Set the run/preview command to use dev mode so the Vite middleware works:
+
+cd CineLoop && NODE_ENV=development npm run dev
+
+
+(If you have a build step, leave it for deployments; for preview we want dev.)
+
+5) Replit Secrets (env vars)
+
+Add these in Secrets (values can be blank while you’re just testing because we added guards):
+
+OPENAI_API_KEY (optional in dev)
+
+TMDB_API_KEY (optional in dev)
+
+DATABASE_URL (optional if your storage handles missing DB)
+
+SESSION_SECRET (any long random string)
+
+6) Test (in the Replit Console)
+# Should return JSON { status: "ok", ... }
+curl -sS $REPLIT_APP_URL/api/health
+
+# Should return a user (because of the dev shim)
+curl -sS $REPLIT_APP_URL/api/auth/user
+
+
+Important: Stop visiting /api/login in the browser for “login.”
+Your auth route is GET /api/auth/user and most other routes require auth via the middleware.
+We added a friendly /api/login handler so you won’t see 404 anymore, but it’s not the login flow.
