@@ -7,8 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
+    ...(process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined
       ? [
           await import("@replit/vite-plugin-cartographer").then((m) =>
             m.cartographer(),
@@ -31,6 +30,10 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    allowedHosts: [
+      "localhost",
+      "7a2496d5-ff41-4601-b205-f40c45e84e59-00-35vyy0qn1zam1.spock.replit.dev"
+    ],
     hmr: {
       port: 3000,
     },
