@@ -11,7 +11,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      env: process.env.NODE_ENV || "development",
+      hasOpenAI: !!process.env.OPENAI_API_KEY,
+      hasDb: !!process.env.DATABASE_URL,
+      hasTmdb: !!process.env.TMDB_API_KEY,
+    });
+  });
+
+  // DEV AUTH SHIM: allow Preview to work without Replit auth finishing.
+  // Only active when not in production.
+  if (process.env.NODE_ENV !== "production") {
+    app.use((req: any, _res, next) => {
+      if (!req.user) req.user = { claims: { sub: "dev-user", username: "dev" } };
+      next();
+    });
+  }
+
+  app.get("/api/login", (_req, res) => {
+    res.status(405).json({ error: "Use GET /api/auth/user after auth. Login is handled by Replit." });
+  });
+
+  // API routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -29,16 +52,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
-      
+
       const posts = await storage.getFeedPosts(userId, limit, offset);
-      
+
       // Enrich posts with user and title data
       const enrichedPosts = await Promise.all(posts.map(async (post) => {
         const author = await storage.getUser(post.authorId);
         const title = await storage.getTitle(post.titleId);
         const userLike = await storage.getUserInteraction(userId, post.id, 'like');
         const userSave = await storage.getUserInteraction(userId, post.id, 'save');
-        
+
         return {
           ...post,
           author,
@@ -47,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isSaved: !!userSave,
         };
       }));
-      
+
       res.json(enrichedPosts);
     } catch (error) {
       console.error("Error fetching feed:", error);
@@ -60,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const postData = insertPostSchema.parse({ ...req.body, authorId: userId });
-      
+
       const post = await storage.createPost(postData);
       res.status(201).json(post);
     } catch (error) {
@@ -77,19 +100,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
-      
+
       const existingLike = await storage.getUserInteraction(userId, postId, 'like');
       if (existingLike) {
         res.status(400).json({ message: "Already liked" });
         return;
       }
-      
+
       await storage.createInteraction({
         userId,
         postId,
         type: 'like',
       });
-      
+
       res.status(201).json({ message: "Post liked" });
     } catch (error) {
       console.error("Error liking post:", error);
@@ -101,13 +124,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
-      
+
       const existingLike = await storage.getUserInteraction(userId, postId, 'like');
       if (!existingLike) {
         res.status(400).json({ message: "Not liked" });
         return;
       }
-      
+
       await storage.deleteInteraction(existingLike.id);
       res.json({ message: "Like removed" });
     } catch (error) {
@@ -120,19 +143,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
-      
+
       const existingSave = await storage.getUserInteraction(userId, postId, 'save');
       if (existingSave) {
         res.status(400).json({ message: "Already saved" });
         return;
       }
-      
+
       await storage.createInteraction({
         userId,
         postId,
         type: 'save',
       });
-      
+
       res.status(201).json({ message: "Post saved" });
     } catch (error) {
       console.error("Error saving post:", error);
@@ -144,13 +167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { postId } = req.params;
-      
+
       const existingSave = await storage.getUserInteraction(userId, postId, 'save');
       if (!existingSave) {
         res.status(400).json({ message: "Not saved" });
         return;
       }
-      
+
       await storage.deleteInteraction(existingSave.id);
       res.json({ message: "Save removed" });
     } catch (error) {
@@ -163,20 +186,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/titles/trending', async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
-      
+
       console.log(`Fetching trending titles with limit: ${limit}`);
-      
+
       // First try to get from database, otherwise fetch from TMDB
       let titles = await storage.getTrendingTitles(limit);
       console.log(`Found ${titles.length} titles in database`);
-      
+
       if (titles.length === 0) {
         console.log("No titles in database, fetching from TMDB...");
         // No titles in database, fetch from TMDB and store them
         try {
           const tmdbTitles = await tmdbService.getTrending();
           console.log(`Fetched ${tmdbTitles.length} titles from TMDB`);
-          
+
           // Store titles in database
           for (const tmdbTitle of tmdbTitles.slice(0, limit)) {
             try {
@@ -187,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Title might already exist, continue
             }
           }
-          
+
           titles = tmdbTitles.slice(0, limit) as any[];
         } catch (tmdbError) {
           console.error("Error fetching from TMDB:", tmdbError);
@@ -195,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           titles = await storage.getTrendingTitles(limit);
         }
       }
-      
+
       console.log(`Returning ${titles.length} titles`);
       res.json(titles);
     } catch (error) {
@@ -208,12 +231,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const title = await storage.getTitle(id);
-      
+
       if (!title) {
         res.status(404).json({ message: "Title not found" });
         return;
       }
-      
+
       res.json(title);
     } catch (error) {
       console.error("Error fetching title:", error);
@@ -225,16 +248,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const limit = parseInt(req.query.limit as string) || 20;
-      
+
       const posts = await storage.getPostsByTitle(id, limit);
-      
+
       // Enrich posts with user data
       const enrichedPosts = await Promise.all(posts.map(async (post) => {
         const author = await storage.getUser(post.authorId);
         const title = await storage.getTitle(post.titleId);
         return { ...post, author, title };
       }));
-      
+
       res.json(enrichedPosts);
     } catch (error) {
       console.error("Error fetching title posts:", error);
@@ -246,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const limit = parseInt(req.query.limit as string) || 5;
-      
+
       const relatedTitles = await storage.getRelatedTitles(id, limit);
       res.json(relatedTitles);
     } catch (error) {
@@ -260,16 +283,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 20;
-      
+
       if (!query) {
         res.status(400).json({ message: "Search query required" });
         return;
       }
-      
+
       // Use TMDB multi-search directly as specified in requirements
       try {
         const tmdbResults = await tmdbService.searchTitles(query);
-        
+
         // Store new titles in database for future reference
         for (const tmdbTitle of tmdbResults.slice(0, limit)) {
           try {
@@ -281,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Continue if error storing - don't break search
           }
         }
-        
+
         res.json(tmdbResults.slice(0, limit));
       } catch (tmdbError) {
         console.error("Error searching TMDB:", tmdbError);
@@ -302,22 +325,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OpenAI conversational movie discovery
   app.post('/api/ai/chat', isAuthenticated, async (req: any, res) => {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+    }
+
     try {
       const { message, sessionId, conversationHistory = [] } = req.body;
       const userId = req.user.claims.sub;
-      
+
       if (!message) {
         res.status(400).json({ message: "Message required" });
         return;
       }
-      
+
       console.log(`AI Chat - User: ${userId}, Session: ${sessionId}, Message: ${message}`);
-      
+
       // Get AI recommendations using OpenAI
       const aiResponse = await openaiService.getMovieRecommendations(message, conversationHistory);
-      
+
       console.log(`AI Response: ${aiResponse.recommendations.length} recommendations`);
-      
+
       // Try to match AI recommendations with our database titles
       const enrichedRecommendations = await Promise.all(
         aiResponse.recommendations.map(async (rec) => {
@@ -331,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               aiRecommendation: true
             };
           }
-          
+
           // If not in database, try TMDB
           try {
             const tmdbResults = await tmdbService.searchTitles(rec.title);
@@ -343,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } catch (error) {
                 // Title might already exist
               }
-              
+
               return {
                 ...tmdbTitle,
                 reason: rec.reason,
@@ -354,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (tmdbError) {
             console.error("Error fetching from TMDB:", tmdbError);
           }
-          
+
           // If not found anywhere, return AI recommendation as-is
           return {
             name: rec.title,
@@ -368,14 +395,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       res.json({
         message: aiResponse.message,
         recommendations: enrichedRecommendations,
         conversationContinues: aiResponse.conversationContinues,
         sessionId: sessionId || `session_${Date.now()}`
       });
-      
+
     } catch (error) {
       console.error("Error with AI chat:", error);
       res.status(500).json({ message: "AI chat failed" });
@@ -384,19 +411,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OpenAI search with context
   app.post('/api/ai/search', isAuthenticated, async (req: any, res) => {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ message: "AI disabled in dev (missing OPENAI_API_KEY)" });
+    }
+
     try {
       const { query, context } = req.body;
-      
+
       if (!query) {
         res.status(400).json({ message: "Query required" });
         return;
       }
-      
+
       console.log(`AI Search - Query: ${query}, Context: ${context || 'none'}`);
-      
+
       // Get AI search results
       const aiRecommendations = await openaiService.searchMoviesWithContext(query, context);
-      
+
       // Enrich with database/TMDB data
       const enrichedResults = await Promise.all(
         aiRecommendations.map(async (rec) => {
@@ -409,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               aiSearch: true
             };
           }
-          
+
           try {
             const tmdbResults = await tmdbService.searchTitles(rec.title);
             if (tmdbResults.length > 0) {
@@ -419,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } catch (error) {
                 // Continue if error storing
               }
-              
+
               return {
                 ...tmdbTitle,
                 reason: rec.reason,
@@ -430,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (tmdbError) {
             console.error("Error fetching from TMDB:", tmdbError);
           }
-          
+
           return {
             name: rec.title,
             year: rec.year,
@@ -443,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       res.json({ results: enrichedResults });
     } catch (error) {
       console.error("Error with AI search:", error);
@@ -456,15 +487,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const limit = parseInt(req.query.limit as string) || 10;
-      
+
       const recommendations = await storage.getUserRecommendations(userId, limit);
-      
+
       // Enrich with title data
       const enrichedRecs = await Promise.all(recommendations.map(async (rec) => {
         const title = await storage.getTitle(rec.titleId);
         return { ...rec, title };
       }));
-      
+
       res.json(enrichedRecs);
     } catch (error) {
       console.error("Error fetching recommendations:", error);
@@ -510,13 +541,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { titleId } = req.params;
-      
+
       const watchlist = await storage.getUserWatchlist(userId);
       if (!watchlist) {
         res.status(404).json({ message: "Watchlist not found" });
         return;
       }
-      
+
       await storage.addToList(watchlist.id, titleId);
       res.json({ message: "Added to watchlist" });
     } catch (error) {
@@ -529,13 +560,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { titleId } = req.params;
-      
+
       const favorites = await storage.getUserFavorites(userId);
       if (!favorites) {
         res.status(404).json({ message: "Favorites not found" });
         return;
       }
-      
+
       await storage.addToList(favorites.id, titleId);
       res.json({ message: "Added to favorites" });
     } catch (error) {
@@ -549,19 +580,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const currentUserId = req.user.claims.sub;
-      
+
       let user;
       if (username) {
         user = await storage.getUserByUsername(username);
       } else {
         user = await storage.getUser(currentUserId);
       }
-      
+
       if (!user) {
         res.status(404).json({ message: "User not found" });
         return;
       }
-      
+
       res.json(user);
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -573,16 +604,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const limit = parseInt(req.query.limit as string) || 20;
-      
+
       const posts = await storage.getPostsByUser(userId, limit);
-      
+
       // Enrich posts with user and title data
       const enrichedPosts = await Promise.all(posts.map(async (post) => {
         const author = await storage.getUser(post.authorId);
         const title = await storage.getTitle(post.titleId);
         return { ...post, author, title };
       }));
-      
+
       res.json(enrichedPosts);
     } catch (error) {
       console.error("Error fetching user posts:", error);
@@ -606,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const followers = await storage.getUserFollowers(userId);
       const following = await storage.getUserFollows(userId);
-      
+
       res.json({
         followersCount: followers.length,
         followingCount: following.length,
