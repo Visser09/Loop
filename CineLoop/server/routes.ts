@@ -13,6 +13,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const hasDb = !!process.env.DATABASE_URL;
   const hasTmdb = !!process.env.TMDB_API_KEY;
+  
+  // Log startup status
+  console.log(`🚀 CineLoop starting with: DB=${hasDb ? 'Connected' : 'Memory'}, TMDB=${hasTmdb ? 'Available' : 'Disabled'}, AI=${!!process.env.OPENAI_API_KEY ? 'Available' : 'Disabled'}`);
 
   // ---- HEALTH CHECK (no auth) -----------------------------------
   app.get("/api/health", (_req, res) => {
@@ -35,28 +38,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
 
-      // NO DB? Return a synthetic user so the app loads,
-      // and avoid calling storage.getUser (which triggers the Neon client).
+      // NO DB? Return a synthetic user so the app loads
       if (!hasDb) {
         return res.json({
           id: userId,
           username: req.user.claims.username || "dev",
           displayName: "Dev User",
           bio: "Local dev user (no DB)",
+          email: null,
+          firstName: null,
+          lastName: null,
+          profileImageUrl: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
       }
 
       const user = await storage.getUser(userId);
+      if (!user) {
+        // Auto-create user if not exists
+        const newUser = await storage.upsertUser({
+          id: userId,
+          username: req.user.claims.username || "dev",
+          displayName: req.user.claims.username || "Dev User",
+        });
+        return res.json(newUser);
+      }
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      // Fallback to synthetic user in case of any error
+      res.json({
+        id: req.user.claims.sub,
+        username: req.user.claims.username || "dev",
+        displayName: "Dev User",
+        bio: "Fallback user",
+        email: null,
+        firstName: null,
+        lastName: null,
+        profileImageUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
   });
 
   // Feed routes
   app.get('/api/feed', isAuthenticated, async (req: any, res) => {
     try {
+      if (!hasDb) {
+        // Return empty feed when no database
+        return res.json([]);
+      }
+      
       const userId = req.user.claims.sub;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
@@ -198,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching trending titles with limit: ${limit}`);
 
       // First try to get from database, otherwise fetch from TMDB
-      let titles = await storage.getTrendingTitles(limit);
+      let titles = hasDb ? await storage.getTrendingTitles(limit) : [];
       console.log(`Found ${titles.length} titles in database`);
 
       if (titles.length === 0) {

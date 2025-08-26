@@ -556,11 +556,13 @@ export class MemStorage implements IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
+    if (!db) throw new Error('Database not available');
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    if (!db) throw new Error('Database not available');
     const [user] = await db
       .insert(users)
       .values({
@@ -941,4 +943,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Use MemStorage when DATABASE_URL is not available, DatabaseStorage when it is
+export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();

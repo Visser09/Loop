@@ -56,14 +56,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // In development, use port 3001 for API server (Vite uses 5000)
-  // In production, use PORT env var (defaults to 5000)
-  const port = parseInt(
-    process.env.NODE_ENV === "development" 
-      ? process.env.API_PORT || '3001'
-      : process.env.PORT || '5000', 
-    10
-  );
+  // Use port 5000 for both development and production
+  const port = parseInt(process.env.PORT || '5000', 10);
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
