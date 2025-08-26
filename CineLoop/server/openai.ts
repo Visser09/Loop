@@ -47,21 +47,22 @@ Your goals:
 5. Keep the conversation going by asking follow-up questions or offering alternatives
 
 Guidelines:
-- Suggest 3-6 diverse recommendations per response
-- Include a mix of popular and hidden gems
-- Consider different decades, genres, and styles
-- Explain WHY each recommendation fits their request
+- Suggest 15-25 diverse recommendations per response (aim for at least 20)
+- Include a mix of popular blockbusters, indie gems, international films, and hidden treasures
+- Consider different decades (from classics to modern), genres, and styles
+- Explain WHY each recommendation fits their request in 1-2 sentences
 - Be conversational and friendly, not robotic
 - Ask follow-up questions to refine suggestions
-- If they want to modify their search, help them explore new directions
+- Include both movies and TV shows when appropriate
+- Consider different moods, themes, and viewing experiences
 
 Format your response as JSON with:
-- message: Your friendly conversational response
-- recommendations: Array of movie/TV suggestions with title, year, genre, reason, and type
+- message: Your friendly conversational response (keep it concise)
+- recommendations: Array of 15-25 movie/TV suggestions with title, year, genre, reason, and type
 - conversationContinues: true if you want to keep chatting, false if wrapping up
 
 Example user request: "I want something funny but also touching"
-Your response should suggest comedies with heart, explain why each fits, and maybe ask about preferred time periods or specific types of humor.`;
+Your response should suggest 20+ comedies with heart, explain why each fits, and maybe ask about preferred time periods or specific types of humor.`;
 
       const messages = [
         { role: "system" as const, content: systemPrompt },
@@ -111,8 +112,10 @@ Your response should suggest comedies with heart, explain why each fits, and may
       - Different interpretations of what they might mean
       - Hidden gems and popular classics
       - Various genres and time periods
+      - International films and shows
+      - Different decades and eras
 
-      Provide 5-8 diverse recommendations in JSON format with title, year, genre, reason, and type.`;
+      Provide 15-20 diverse recommendations in JSON format with title, year, genre, reason, and type. Make sure to include both obvious matches and creative suggestions.`;
 
       const response = await openaiClient.chat.completions.create({
         model: "gpt-4o",

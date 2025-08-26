@@ -115,7 +115,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
                 {message.recommendations && message.recommendations.length > 0 && (
                   <div className="mt-4 space-y-3">
                     <p className="text-xs text-cine-muted font-medium">Movie Recommendations:</p>
-                    {message.recommendations.map((rec, recIndex) => (
+                    {message.recommendations.slice(0, 20).map((rec, recIndex) => (
                       <Card key={recIndex} className="bg-cine-black/50 border-cine-gray/30">
                         <CardContent className="p-3">
                           <div className="flex items-start space-x-3">
@@ -132,7 +132,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
                             )}
 
                             <div className="flex-1 min-w-0">
-                              <Link 
+                              <Link
                                 href={rec.id ? `/title/${rec.id}` : "#"}
                                 className="block hover:text-cine-blue transition-colors"
                               >
@@ -223,8 +223,8 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
             className="flex-1 bg-cine-gray border-cine-gray/50 text-cine-text placeholder-cine-muted focus:border-cine-blue"
             disabled={chatMutation.isPending}
           />
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!input.trim() || chatMutation.isPending}
             className="bg-cine-blue hover:bg-cine-blue/90 text-white"
           >
@@ -236,7 +236,7 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
         <div className="mt-2 flex flex-wrap gap-2">
           {[
             "Something funny but touching",
-            "Thriller like Zodiac", 
+            "Thriller like Zodiac",
             "Feel-good romantic comedy",
             "Mind-bending sci-fi"
           ].map((suggestion, index) => (

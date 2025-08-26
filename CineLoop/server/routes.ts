@@ -349,29 +349,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const tmdbResults = await tmdbService.searchTitles(query);
 
-        // Store new titles in database for future reference
-        for (const tmdbTitle of tmdbResults.slice(0, limit)) {
-          try {
-            const existing = await storage.getTitleByExternalId(tmdbTitle.externalId!);
-            if (!existing) {
-              await storage.createTitle(tmdbTitle);
+        // Try to store new titles in database for future reference (but don't fail if DB is down)
+        if (hasDb) {
+          for (const tmdbTitle of tmdbResults.slice(0, limit)) {
+            try {
+              const existing = await storage.getTitleByExternalId(tmdbTitle.externalId!);
+              if (!existing) {
+                await storage.createTitle(tmdbTitle);
+              }
+            } catch (error) {
+              // Continue if error storing - don't break search
+              console.log("DB storage failed, continuing with TMDB results only");
             }
-          } catch (error) {
-            // Continue if error storing - don't break search
           }
         }
 
         res.json(tmdbResults.slice(0, limit));
       } catch (tmdbError) {
         console.error("Error searching TMDB:", tmdbError);
-        // Fallback to local search only if TMDB fails
-        try {
-          const localResults = await storage.searchTitles(query, limit);
-          res.json(localResults);
-        } catch (localError) {
-          console.error("Error with local search fallback:", localError);
-          res.json([]); // Return empty array instead of error
-        }
+        // Return empty results if TMDB fails - don't try database fallback since it's having connection issues
+        res.json([]);
       }
     } catch (error) {
       console.error("Error in search endpoint:", error);
