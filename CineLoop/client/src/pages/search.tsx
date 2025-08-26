@@ -34,12 +34,12 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-cine-black">
-      <Header 
-        onSearchClick={() => {}} 
-        onNotificationsClick={() => {}} 
+      <Header
+        onSearchClick={() => {}}
+        onNotificationsClick={() => {}}
         showSearch={false}
       />
-      
+
       <main className="pb-20">
         {/* Search Section */}
         <div className="p-4 space-y-4">
@@ -210,7 +210,7 @@ export default function SearchPage() {
       </main>
 
       <BottomNav />
-      
+
       {/* AI Chat Dialog */}
       <Dialog open={showAIChat} onOpenChange={setShowAIChat}>
         <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 bg-transparent border-none">

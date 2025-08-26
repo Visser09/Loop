@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { 
   X, 
@@ -41,6 +43,8 @@ export default function AIDrawer({ isOpen, onClose }: AIDrawerProps) {
 
   const aiSearchMutation = useMutation({
     mutationFn: async (searchQuery: string) => {
+      // Assuming apiRequest handles the POST request with headers and body
+      // The original code used fetch directly, this change aligns with apiRequest usage
       const response = await apiRequest("POST", "/api/ai/search", { query: searchQuery });
       return response.json();
     },
@@ -85,7 +89,11 @@ export default function AIDrawer({ isOpen, onClose }: AIDrawerProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden bg-cine-dark border-cine-gray p-0">
-        <div className="flex flex-col h-full">
+          <DialogTitle className="sr-only">AI Search</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search for movies and TV shows using AI-powered natural language queries
+          </DialogDescription>
+          <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-cine-gray/30">
             <div className="flex items-center space-x-3">
@@ -147,7 +155,7 @@ export default function AIDrawer({ isOpen, onClose }: AIDrawerProps) {
                     Back
                   </Button>
                 </div>
-                
+
                 {results.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-cine-muted">No results found. Try rephrasing your query.</p>

@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { 
   X, 
@@ -125,6 +127,10 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden bg-cine-black border-cine-gray p-0">
+          <DialogTitle className="sr-only">{title?.name || "Title Details"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Detailed information about {title?.name || "the selected title"}
+          </DialogDescription>
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-cine-text mb-2">Title not found</h2>
@@ -142,6 +148,10 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden bg-cine-black border-cine-gray p-0">
+        <DialogTitle className="sr-only">{title?.name || "Title Details"}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Detailed information about {title?.name || "the selected title"}
+        </DialogDescription>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-cine-gray/30">
@@ -175,7 +185,7 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
                     alt={title.name}
                     className="w-20 h-30 object-cover rounded-lg shadow-lg"
                   />
-                  
+
                   <div className="flex-1">
                     <h1 className="text-xl font-bold text-white mb-1">{title.name}</h1>
                     <div className="flex items-center space-x-3 text-sm text-gray-300 mb-2">
@@ -194,7 +204,7 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
                         <span>{title.rating}</span>
                       </div>
                     </div>
-                    
+
                     {/* Genres */}
                     <div className="flex flex-wrap gap-1">
                       {title.genres?.slice(0, 3).map((genre: string) => (
@@ -219,7 +229,7 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
                   <Bookmark className="w-4 h-4 mr-2" />
                   {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
                 </Button>
-                
+
                 <Button
                   onClick={() => addToFavoritesMutation.mutate()}
                   disabled={isInFavorites || addToFavoritesMutation.isPending}
@@ -228,7 +238,7 @@ export default function TitleDetailModal({ titleId, isOpen, onClose }: TitleDeta
                 >
                   <Heart className={`w-4 h-4 ${isInFavorites ? "fill-current" : ""}`} />
                 </Button>
-                
+
                 <Button variant="outline" className="border-cine-gray text-cine-text hover:bg-cine-gray/30">
                   <Share className="w-4 h-4" />
                 </Button>
