@@ -1,0 +1,38 @@
+
+> rest-express@1.0.0 dev
+DATABASE_URL is not set - using in-memory storage
+OPENAI_API_KEY is not set - AI features will be disabled
+🚀 CineLoop starting with: DB=Memory, TMDB=Disabled, AI=Disabled
+1:55:14 AM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+1:55:17 AM [express] GET /api/auth/user 200 in 2ms :: {"id":"dev-user","username":"dev","displayName…
+1:55:17 AM [express] GET /api/feed 200 in 1ms :: []
+1:55:17 AM [express] GET /api/recommendations 200 in 1ms :: []
+Fetching trending titles with limit: 10
+Found 0 titles in database
+No titles in database, fetching from TMDB...
+Fetched 0 titles from TMDB
+Returning 0 titles
+1:55:17 AM [express] GET /api/titles/trending 200 in 0ms :: []
+1:56:21 AM [express] POST /api/ai/search 503 in 1ms :: {"message":"AI disabled in dev (missing OPENA…
+1:56:24 AM [express] POST /api/ai/search 503 in 2ms :: {"message":"AI disabled in dev (missing OPENA…
+1:57:01 AM [express] GET /api/search/l/[object%20Object] 200 in 12ms
+1:57:01 AM [express] GET /api/search/lo/[object%20Object] 200 in 9ms
+1:57:01 AM [express] GET /api/search/lor/[object%20Object] 200 in 5ms
+1:57:02 AM [express] GET /api/search/lord/[object%20Object] 200 in 3ms
+1:57:02 AM [express] GET /api/search/lord%20/[object%20Object] 200 in 4ms
+1:57:04 AM [express] GET /api/search/lord%20o/[object%20Object] 200 in 3ms
+1:57:04 AM [express] GET /api/search/lord%20of/[object%20Object] 200 in 4ms
+1:57:04 AM [express] GET /api/search/lord%20of%20/[object%20Object] 200 in 4ms
+1:57:04 AM [express] GET /api/search/lord%20of%20t/[object%20Object] 200 in 4ms
+1:57:04 AM [express] GET /api/search/lord%20of%20th/[object%20Object] 200 in 4ms
+1:57:04 AM [express] GET /api/search/lord%20of%20the/[object%20Object] 200 in 3ms
+1:57:04 AM [express] GET /api/search/lord%20of%20the%20/[object%20Object] 200 in 4ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20r/[object%20Object] 200 in 4ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20ri/[object%20Object] 200 in 3ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20rin/[object%20Object] 200 in 2ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20ring/[object%20Object] 200 in 3ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20rings/[object%20Object] 200 in 2ms
+1:57:05 AM [express] GET /api/search/lord%20of%20the%20rings%20/[object%20Object] 200 in 3ms
