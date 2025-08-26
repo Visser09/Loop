@@ -13,7 +13,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const hasDb = !!process.env.DATABASE_URL;
   const hasTmdb = !!process.env.TMDB_API_KEY;
-  
+
   // Log startup status
   console.log(`🚀 CineLoop starting with: DB=${hasDb ? 'Connected' : 'Memory'}, TMDB=${hasTmdb ? 'Available' : 'Disabled'}, AI=${!!process.env.OPENAI_API_KEY ? 'Available' : 'Disabled'}`);
 
@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Return empty feed when no database
         return res.json([]);
       }
-      
+
       const userId = req.user.claims.sub;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
