@@ -2,9 +2,15 @@ import express, { type Request, Response, NextFunction } from "express";
 import { config } from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from .env file
-config({ path: __dirname + "/.env" });
+config({ path: join(__dirname, ".env") });
 
 const app = express();
 app.use(express.json());
