@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-let openai: OpenAI | null = null;
+let openaiClient: OpenAI | null = null;
 
 if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 } else {
   console.warn('OPENAI_API_KEY is not set - AI features will be disabled');
 }
@@ -28,14 +28,14 @@ export class OpenAIService {
     userMessage: string,
     conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
   ): Promise<ConversationalResponse> {
-    if (!openai) {
+    if (!openaiClient) {
       return {
         message: "AI recommendations are currently unavailable. Please configure your OpenAI API key.",
         recommendations: [],
         conversationContinues: false
       };
     }
-    
+
     try {
       const systemPrompt = `You are a knowledgeable movie and TV show enthusiast who helps people discover content they'll love. You have extensive knowledge of movies and TV shows from all eras, genres, and regions.
 
@@ -69,7 +69,7 @@ Your response should suggest comedies with heart, explain why each fits, and may
         { role: "user" as const, content: userMessage }
       ];
 
-      const response = await openai.chat.completions.create({
+      const response = await openaiClient.chat.completions.create({
         model: "gpt-4o",
         messages,
         response_format: { type: "json_object" },
@@ -78,7 +78,7 @@ Your response should suggest comedies with heart, explain why each fits, and may
       });
 
       const result = JSON.parse(response.choices[0].message.content || "{}");
-      
+
       // Ensure we always return the expected format
       return {
         message: result.message || "I'd be happy to help you find some great movies!",
@@ -96,25 +96,25 @@ Your response should suggest comedies with heart, explain why each fits, and may
     query: string,
     context?: string
   ): Promise<MovieRecommendation[]> {
-    if (!openai) {
+    if (!openaiClient) {
       console.warn('OpenAI not available for search');
       return [];
     }
-    
+
     try {
       const prompt = `Find movies and TV shows that match this search: "${query}"
       ${context ? `Additional context: ${context}` : ""}
-      
+
       Think broadly and creatively. Consider:
       - Direct matches to the title or theme
       - Movies with similar vibes, moods, or feelings
       - Different interpretations of what they might mean
       - Hidden gems and popular classics
       - Various genres and time periods
-      
+
       Provide 5-8 diverse recommendations in JSON format with title, year, genre, reason, and type.`;
 
-      const response = await openai.chat.completions.create({
+      const response = await openaiClient.chat.completions.create({
         model: "gpt-4o",
         messages: [
           {

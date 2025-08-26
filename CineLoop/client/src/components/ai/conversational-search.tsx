@@ -38,14 +38,13 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
         .filter(m => m.role === "user" || m.role === "assistant")
         .map(m => ({ role: m.role, content: m.content }));
 
-      return await apiRequest("/api/ai/chat", {
-        method: "POST",
-        body: JSON.stringify({
-          message,
-          sessionId,
-          conversationHistory
-        })
+      const response = await apiRequest("POST", "/api/ai/chat", {
+        message,
+        conversationHistory,
+        sessionId
       });
+
+      return response.json();
     },
     onSuccess: (response) => {
       const assistantMessage: Message = {
