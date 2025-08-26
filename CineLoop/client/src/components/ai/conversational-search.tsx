@@ -40,8 +40,8 @@ export default function ConversationalSearch({ onClose }: ConversationalSearchPr
 
       const response = await apiRequest("POST", "/api/ai/chat", {
         message,
-        conversationHistory,
-        sessionId
+        sessionId,
+        conversationHistory
       });
 
       return response.json();

@@ -23,8 +23,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: "ok",
       env: process.env.NODE_ENV || "development",
       hasOpenAI: !!process.env.OPENAI_API_KEY,
+      openaiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
       hasDb,
       hasTmdb,
+      tmdbKeyLength: process.env.TMDB_API_KEY ? process.env.TMDB_API_KEY.length : 0,
     });
   });
 
@@ -399,41 +401,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`AI Response: ${aiResponse.recommendations.length} recommendations`);
 
-      // Try to match AI recommendations with our database titles
+      // Try to match AI recommendations with our database titles, fallback to TMDB
       const enrichedRecommendations = await Promise.all(
         aiResponse.recommendations.map(async (rec) => {
-          // Search for the title in our database first
-          const dbResults = await storage.searchTitles(rec.title, 1);
-          if (dbResults.length > 0) {
-            return {
-              ...dbResults[0],
-              reason: rec.reason,
-              badges: [rec.genre || rec.type].filter(Boolean),
-              aiRecommendation: true
-            };
+          // Try database first if available
+          if (hasDb) {
+            try {
+              const dbResults = await storage.searchTitles(rec.title, 1);
+              if (dbResults.length > 0) {
+                return {
+                  ...dbResults[0],
+                  reason: rec.reason,
+                  badges: [rec.genre || rec.type].filter(Boolean),
+                  aiRecommendation: true
+                };
+              }
+            } catch (dbError) {
+              console.error("Database search failed, trying TMDB:", dbError);
+            }
           }
 
-          // If not in database, try TMDB
-          try {
-            const tmdbResults = await tmdbService.searchTitles(rec.title);
-            if (tmdbResults.length > 0) {
-              const tmdbTitle = tmdbResults[0];
-              // Store in database for future use
-              try {
-                await storage.createTitle(tmdbTitle);
-              } catch (error) {
-                // Title might already exist
-              }
+          // Try TMDB if database failed or not available
+          if (process.env.TMDB_API_KEY) {
+            try {
+              const tmdbResults = await tmdbService.searchTitles(rec.title);
+              if (tmdbResults.length > 0) {
+                const tmdbTitle = tmdbResults[0];
+                
+                // Try to store in database if available
+                if (hasDb) {
+                  try {
+                    await storage.createTitle(tmdbTitle);
+                  } catch (error) {
+                    // Continue if storage fails
+                  }
+                }
 
-              return {
-                ...tmdbTitle,
-                reason: rec.reason,
-                badges: [rec.genre || rec.type].filter(Boolean),
-                aiRecommendation: true
-              };
+                return {
+                  ...tmdbTitle,
+                  reason: rec.reason,
+                  badges: [rec.genre || rec.type].filter(Boolean),
+                  aiRecommendation: true
+                };
+              }
+            } catch (tmdbError) {
+              console.error("Error fetching from TMDB:", tmdbError);
             }
-          } catch (tmdbError) {
-            console.error("Error fetching from TMDB:", tmdbError);
           }
 
           // If not found anywhere, return AI recommendation as-is
@@ -485,35 +498,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enrich with database/TMDB data
       const enrichedResults = await Promise.all(
         aiRecommendations.map(async (rec) => {
-          const dbResults = await storage.searchTitles(rec.title, 1);
-          if (dbResults.length > 0) {
-            return {
-              ...dbResults[0],
-              reason: rec.reason,
-              badges: [rec.genre || rec.type].filter(Boolean),
-              aiSearch: true
-            };
+          // Try database first if available
+          if (hasDb) {
+            try {
+              const dbResults = await storage.searchTitles(rec.title, 1);
+              if (dbResults.length > 0) {
+                return {
+                  ...dbResults[0],
+                  reason: rec.reason,
+                  badges: [rec.genre || rec.type].filter(Boolean),
+                  aiSearch: true
+                };
+              }
+            } catch (dbError) {
+              console.error("Database search failed, trying TMDB:", dbError);
+            }
           }
 
-          try {
-            const tmdbResults = await tmdbService.searchTitles(rec.title);
-            if (tmdbResults.length > 0) {
-              const tmdbTitle = tmdbResults[0];
-              try {
-                await storage.createTitle(tmdbTitle);
-              } catch (error) {
-                // Continue if error storing
-              }
+          // Try TMDB if database failed or not available
+          if (process.env.TMDB_API_KEY) {
+            try {
+              const tmdbResults = await tmdbService.searchTitles(rec.title);
+              if (tmdbResults.length > 0) {
+                const tmdbTitle = tmdbResults[0];
+                
+                // Try to store in database if available
+                if (hasDb) {
+                  try {
+                    await storage.createTitle(tmdbTitle);
+                  } catch (error) {
+                    // Continue if storage fails
+                  }
+                }
 
-              return {
-                ...tmdbTitle,
-                reason: rec.reason,
-                badges: [rec.genre || rec.type].filter(Boolean),
-                aiSearch: true
-              };
+                return {
+                  ...tmdbTitle,
+                  reason: rec.reason,
+                  badges: [rec.genre || rec.type].filter(Boolean),
+                  aiSearch: true
+                };
+              }
+            } catch (tmdbError) {
+              console.error("Error fetching from TMDB:", tmdbError);
             }
-          } catch (tmdbError) {
-            console.error("Error fetching from TMDB:", tmdbError);
           }
 
           return {
