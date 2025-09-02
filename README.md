@@ -1,35 +1,35 @@
-# 🎬 Loop
+#  Loop
 
-Loop is a social movie discovery app with an **AI search buddy** that helps you find films the way you actually talk about them.  
-Instead of digging through lists, you can just chat with Loop like a friend — “Show me Brad Pitt’s movies” or “What’s a good sci-fi thriller from the 90s?” — and it instantly pulls up suggestions.
+Loop is a **movie social app** where you can share, discover, and talk about films with friends.  
+It combines an **Instagram-style social feed** with an **AI search buddy** that helps you find movies the way you actually talk about them.
 
 ---
 
-## ✨ Features
+##  Features
+
+- **Social Feed**  
+  - Post about movies you love (or hate).  
+  - Like and comment on friends’ posts.  
+  - Discover what’s trending in your community.  
+
+- **Profiles**  
+  - Personal movie timeline.  
+  - Showcase your posts, favorites, and watchlist.  
+  - Follow others to keep up with their taste.  
 
 - **AI Search Buddy**  
-  - Conversational search engine for movies.  
-  - Understands natural language like “that Tom Cruise movie where he runs a lot.”  
-  - Displays real results in a clean, scrollable layout.
+  - Chat to find movies in plain language.  
+  - Search by actor, genre, director, or even vague memories.  
+  - Pulls up full filmographies and movie suggestions instantly.  
 
 - **Movie Library**  
-  - Browse by actor, director, genre, or year.  
-  - See complete filmographies, not just partial lists.  
-  - Rich metadata: posters, release dates, descriptions.
-
-- **Social Layer** (coming soon 🚧)  
-  - Share your favorite films with friends.  
-  - Comment, recommend, and build watchlists.  
-  - Discover trending movies through community picks.
-
-- **Modern UI**  
-  - Dark theme by default.  
-  - Responsive and mobile-friendly.  
-  - Clean chat + search results side by side.
+  - Rich data: posters, release dates, descriptions.  
+  - Organized browsing by category or person.  
+  - Clean layout for quick exploration.  
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 Clone the repo:
 
